@@ -284,6 +284,8 @@
                             <th>나이</th>
                             <th>행복</th>
                             <th>분노</th>
+                            <th>현재 HP</th>
+                            <th>병원행</th>
                             <th>폭력</th>
                             <th>친목</th>
                             <th>임신</th>
@@ -631,7 +633,6 @@ function resolveInteraction(actor, receiver) {
     } else {
         let rnd = Math.floor(Math.random() * 8);
         let actName = "";
-        actor.totalSuspicious++; 
         if(rnd === 0) { actor.anger += 3; actName = "종교권유"; }
         else if(rnd === 1) { actor.anger += 1; actName = "구걸"; }
         else if(rnd === 2) { actor.anger += 10; actName = "절도"; monthlyStats.theft++; }
@@ -813,9 +814,9 @@ function endSession() {
     processStocks();
     bots = bots.filter(b => b.hospitalCount < 10);
 
-    if (policyTimer > 0) {
+    if (policyTimer > 1) {
         policyTimer--;
-        if (policyTimer === 0) { P_PREG_REQ = 5; P_COOLDOWN = 10; P_STRICT_PUNISH = false; }
+        if (policyTimer === 1) { P_PREG_REQ = 5; P_COOLDOWN = 10; P_STRICT_PUNISH = false; }
     }
 
     updateUI();
@@ -1065,6 +1066,9 @@ function openRoster() {
             <td>${ageStr}</td>
             <td>${Math.floor(bot.happiness)}</td>
             <td>${Math.floor(bot.anger)}</td>
+            
+            <td style="color:#55efc4; font-weight:bold;">${bot.hp} / ${bot.maxHp}</td>
+            <td style="color:#e17055;">${bot.hospitalCount}회</td>
             <td style="color:#ff7675;">${bot.totalAttacks}</td>
             <td style="color:#74b9ff;">${bot.totalFriendly}</td>
             <td>${bot.totalPregnancies}</td>
@@ -1074,7 +1078,7 @@ function openRoster() {
             <td>${stockName}</td>
         `;
         tbody.appendChild(tr);
-    });
+    });        
     
     document.getElementById('roster-overlay').style.display = 'flex';
 }
