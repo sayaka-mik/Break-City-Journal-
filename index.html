@@ -207,7 +207,7 @@
             <input type="range" id="volume-slider" min="0" max="1" step="0.02" value="0.3">
         </div>
         <div class="logo-title">Break City Journal</div>
-        <div class="logo-subtitle">브레이크 시티 저널(v.0.22)<br>(achievements bugfix)</div>
+        <div class="logo-subtitle">브레이크 시티 저널(v.0.23)<br>(achievements,pregnant)</div>
         <button class="btn-large" id="btn-start"><span style="font-size:28px">📑</span> 저널 읽기</button>
         <button class="btn-large" id="btn-start-epic" style="background-color: #8e44ad; border-color: #9b59b6; margin-top: 10px;"><span style="font-size:28px">🌃</span> 도시 전설</button>
     </div>
@@ -576,6 +576,8 @@ class Bot {
         this.totalPregnancies = 0;   // 임신 건수
         this.totalMiscarriages = 0;  // 유산 건수
         this.totalSuspicious = 0;    // 수상한 행위 (친목/공격이 아닌 랜덤 행동)
+        this.totalChildAbuse = 0;    // 💡 [신규] 아동학대(공격) 건수
+        this.totalKidnap = 0; 
         this.pickStock();
         globalBotRegistry.push(this); 
 
@@ -773,7 +775,10 @@ function resolveInteraction(actor, receiver) {
         // ... (이하 동일)
         
         monthlyStats.friendly++;
-        if (receiver.age <= 15) monthlyStats.kidnap++; 
+        if (receiver.age <= 15) { 
+            monthlyStats.kidnap++; 
+            actor.totalKidnap++; // 💡 [신규] 유괴범 카운터 추가
+        } 
 
         logMsg(`"${actor.code}"${getParticle(actor.code, '이가')} "${receiver.code}"${getParticle(receiver.code, '와과')} "친목질"했습니다.`);
         logMsg(`"${actor.code}"${getParticle(actor.code, '이가')} 행복해합니다.`);
@@ -788,7 +793,10 @@ function resolveInteraction(actor, receiver) {
         receiver.happiness = Math.max(0, receiver.happiness - 3);
         
         monthlyStats.attacks++;
-        if (receiver.age <= 15) monthlyStats.childAbuse++; 
+        if (receiver.age <= 15) {
+           monthlyStats.childAbuse++; 
+            actor.totalChildAbuse++; // 💡 [신규] 아동학대범 카운터 추가
+        }
 
         logMsg(`"${actor.code}"${getParticle(actor.code, '이가')} "${receiver.code}"${getParticle(receiver.code, '을를')} "공격"했습니다.`);
         logMsg(`"${receiver.code}"${getParticle(receiver.code, '이가')} 분노합니다.`);
@@ -1510,7 +1518,20 @@ function showEpicEnding() {
     let highestDeathRuler = [...rulerStats].sort((a,b)=>b.deaths - a.deaths)[0];
     let highestImmigrantRuler = [...rulerStats].sort((a,b)=>b.immigrants - a.immigrants)[0];
 
-    // 💡 [신규 추가] 브레이크 시티 5대 누적 총계 계산
+    // (showEpicEnding 내부) ... let highestImmigrantRuler = ... 밑에서부터 덮어쓰기
+
+    // 💡 [신규] 아동 관련 범죄 봇 계산
+    let mostChildAbuseBot = [...globalBotRegistry].sort((a,b)=>b.totalChildAbuse - a.totalChildAbuse)[0];
+    let mostKidnapBot = [...globalBotRegistry].sort((a,b)=>b.totalKidnap - a.totalKidnap)[0];
+
+    // 💡 [수정] 0회일 경우 무조건 '기록없음'으로 처리하는 방어 로직 (0회 버그 픽스)
+    let birthText = (mostBirthsBot && mostBirthsBot.children.length > 0) ? `${mostBirthsBot.code} (${mostBirthsBot.children.length}명)` : '<span style="color:#888;">기록없음</span>';
+    let attackText = (mostAttacksBot && mostAttacksBot.totalAttacks > 0) ? `${mostAttacksBot.code} (${mostAttacksBot.totalAttacks}회)` : '<span style="color:#888;">기록없음</span>';
+    let suspText = (mostSuspiciousBot && mostSuspiciousBot.totalSuspicious > 0) ? `${mostSuspiciousBot.code} (${mostSuspiciousBot.totalSuspicious}회)` : '<span style="color:#888;">기록없음</span>';
+    let abuseText = (mostChildAbuseBot && mostChildAbuseBot.totalChildAbuse > 0) ? `${mostChildAbuseBot.code} (${mostChildAbuseBot.totalChildAbuse}회)` : '<span style="color:#888;">기록없음</span>';
+    let kidnapText = (mostKidnapBot && mostKidnapBot.totalKidnap > 0) ? `${mostKidnapBot.code} (${mostKidnapBot.totalKidnap}회)` : '<span style="color:#888;">기록없음</span>';
+
+    // 💡 브레이크 시티 5대 누적 총계 계산
     let totalEverPop = globalBotRegistry.length;
     let totalEverPregnancies = globalBotRegistry.reduce((sum, b) => sum + b.totalPregnancies, 0);
     let totalEverBirths = globalBotRegistry.reduce((sum, b) => sum + b.children.length, 0);
@@ -1553,15 +1574,15 @@ function showEpicEnding() {
     let leastText = policyHistory.length > 0 ? `${pNames[leastPol]} (총 ${minCount}회)` : "기록없음";
     
     document.getElementById('epic-hof').innerHTML = `
-        <h3 style="color:#e67e22; margin-top:0; position: sticky; top: -15px; background: #222; padding-bottom: 5px;">🏆 명예의 전당</h3>
+        <h3 style="color:#e67e22; margin-top:0; position: sticky; top: -15px; background: #222; padding-bottom: 5px; z-index: 10;">🏆 명예의 전당</h3>
         
         <div style="background:#1a1a1a; padding:12px; border-radius:6px; border:1px solid #333; margin-bottom:15px; text-align:center; line-height:1.8;">
             <div style="color:#aaa; font-size:11px; margin-bottom:5px; font-weight:bold;">[ 📜 도시 누적 통계 ]</div>
             <span style="margin-right:12px;"><b>도시인구총원:</b> <span style="color:#f1c40f;">누적 ${totalEverPop}명</span></span><br>
-            <span><b>묘비:</b> <span style="color:#d63031;">${totalEverDeaths}개</span></span><br>
+            <span><b>묘비:</b> <span style="color:#d63031;">총 ${totalEverDeaths}개</span></span><br>
             <span style="margin-right:12px;"><b>사랑의 결실:</b> <span style="color:#e84393;">총 ${totalEverPregnancies}회</span></span><br>
             <span><b>새로운 탄생:</b> <span style="color:#00b894;">총 ${totalEverBirths}명</span></span><br>
-            <span><b>필멸자의 분노:</b> <span style="color:#e17055;">총 ${totalEverAttacks}번 분노</span></span>
+            <span><b>필멸자의 분노:</b> <span style="color:#e17055;">총 ${totalEverAttacks}번의 분노행동</span></span>
         </div>
 
         <ul style="list-style:none; padding:0; margin:0; font-size:13px; line-height:1.8;">
@@ -1569,16 +1590,22 @@ function showEpicEnding() {
             <li><b>브레이크 시티의 핏줄:</b> <span style="color:#f1c40f;">${bloodText}</span></li>
             <li style="border-top:1px dashed #555; margin-top:5px; padding-top:5px;"><b>미치광이 시장:</b> 제${highestDeathRuler ? highestDeathRuler.ruler : 1}대 (임기 중 <span style="color:#e74c3c;">사망 ${highestDeathRuler ? highestDeathRuler.deaths : 0}명</span>)</li>
             <li><b>간첩 의심 시장:</b> 제${highestImmigrantRuler ? highestImmigrantRuler.ruler : 1}대 (임기 중 <span style="color:#3498db;">이민 수용 ${highestImmigrantRuler ? highestImmigrantRuler.immigrants : 0}명</span>)</li>
-            <li><b>최고 평화 통치자:</b> 제${lowestAttackRuler ? lowestAttackRuler.ruler : 1}대 (임기 중 폭력 ${lowestAttackRuler ? lowestAttackRuler.attacks : 0}건)</li>
-            <li><b>최고 번영 통치자:</b> 제${highestBirthRuler ? highestBirthRuler.ruler : 1}대 (임기 중 출산 ${highestBirthRuler ? highestBirthRuler.births : 0}명)</li>
-            <li style="border-top:1px dashed #555; margin-top:5px; padding-top:5px;"><b>최장수 개체:</b> ${oldest ? `${oldest.code} (${oldest.age}세)` : '기록없음'}</li>
-            <li><b>최다 출산 개체:</b> ${mostBirthsBot ? `${mostBirthsBot.code} (${mostBirthsBot.children.length}명)` : '기록없음'}</li>
-            <li><b>최다 폭력 개체:</b> ${mostAttacksBot ? `${mostAttacksBot.code} (${mostAttacksBot.totalAttacks}회)` : '기록없음'}</li>
-            <li><b>최다 기행(수상한행위):</b> ${mostSuspiciousBot ? `${mostSuspiciousBot.code} (${mostSuspiciousBot.totalSuspicious}회)` : '기록없음'}</li>
+            <li><b>최고 평화 통치자:</b> 제${lowestAttackRuler ? lowestAttackRuler.ruler : 1}대 (임기 중 폭력 고작 ${lowestAttackRuler ? lowestAttackRuler.attacks : 0}건)</li>
+            <li><b>최고 번영 통치자:</b> 제${highestBirthRuler ? highestBirthRuler.ruler : 1}대 (임기 중 출산 무려 ${highestBirthRuler ? highestBirthRuler.births : 0}명)</li>
+            <li style="border-top:1px dashed #555; margin-top:5px; padding-top:5px;"><b>최장수 개체:</b> ${oldest ? `${oldest.code} (${oldest.age}세)` : '<span style="color:#888;">기록없음</span>'}</li>
+            <li><b>최다 출산 개체:</b> ${birthText}</li>
+            <li><b>최다 폭력 개체:</b> ${attackText}</li>
+            
+            <li><b>최다 아동학대 개체:</b> ${abuseText}</li>
+            <li><b>아동성애 의심 개체:</b> ${kidnapText}</li>
+            
+            <li><b>최고로 수상한 개체:</b> ${suspText}</li>
             <li style="border-top:1px dashed #555; margin-top:5px; padding-top:5px;"><b>최장 연속 채택 정책:</b> ${conText}</li>
             <li><b>최소 채택 정책:</b> ${leastText}</li>
         </ul>
     `;
+// ... (이하 동일, let logArr = []; 로 이어짐)
+
 
     let logArr = []; let rIdx = 0;
     for(let i=0; i<epicLogs.length; i++) {
