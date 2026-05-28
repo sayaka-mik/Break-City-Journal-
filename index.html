@@ -15,7 +15,7 @@
         }
 
         #device-container {
-            width: 100%; max-width: 450px; aspect-ratio: 9/14;
+            width: 100%; max-width: 450px; aspect-ratio: 9/15;
             background-color: #111111; position: relative;
             box-shadow: 0 0 20px rgba(0,0,0,0.8);
             display: flex; flex-direction: column; overflow: hidden;
@@ -142,6 +142,33 @@
         }
         .stock-item-box:hover { background-color: #34495e; border-color: #f1c40f; }
         .stock-meta-info { font-size: 11px; color: #b2bec3; margin-top: 4px; line-height: 1.4; }
+        
+                /* ---------------- 시민 명부 오버레이 ---------------- */
+        #roster-overlay {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.9); z-index: 70; /* 가장 위에 띄움 */
+            flex-direction: column; justify-content: center; align-items: center; padding: 10px; box-sizing: border-box;
+        }
+        .roster-box {
+            background-color: #222; color: #fff; width: 100%; max-width: 450px; height: 85%; 
+            display: flex; flex-direction: column; border-radius: 8px; border: 2px solid #555;
+        }
+        .roster-table-container {
+            overflow: auto; flex: 1; margin: 15px 10px; border: 1px solid #444; background: #1a1a1a;
+        }
+        .roster-table {
+            width: 100%; border-collapse: collapse; white-space: nowrap; font-size: 11px; text-align: center;
+        }
+        .roster-table th {
+            background: #3e422b; position: sticky; top: 0; padding: 8px 6px; color: #f1c40f; 
+            border-bottom: 2px solid #555; border-right: 1px solid #444; z-index: 2;
+        }
+        .roster-table td {
+            padding: 6px 5px; border-bottom: 1px solid #333; border-right: 1px solid #333; color: #eee;
+        }
+        .roster-table tr:nth-child(even) { background-color: #242424; }
+        .roster-table tr:hover { background-color: #3a3a3a; }
+
     </style>
 </head>
 <body>
@@ -173,18 +200,26 @@
     </div>
 
     <div id="game-screen">
+    
+
         <div id="top-bar">
             <div>
                 <span class="stat-text">Date</span> 
                 <span class="stat-value" id="ui-year">0</span>년 
                 <span class="stat-value" id="ui-month">1</span>개월
             </div>
-            <button class="btn-retire" id="btn-retire">🚪 퇴임한다</button>
+            
+            <div style="display: flex; justify-content: center; gap: 8px;">
+                <button class="btn-retire" id="btn-roster" style="background-color: #2980b9; border-color: #3498db;"> 명부</button>
+                <button class="btn-retire" id="btn-retire"> 퇴임</button>
+            </div>
+            
             <div style="text-align: right;">
                 <span class="stat-text">Pop</span> 
                 <span class="stat-value" id="ui-pop">100</span>
             </div>
         </div>
+
         <div id="map-container"><canvas id="gameCanvas" width="500" height="500"></canvas></div>
         <div id="log-area"></div>
         <div id="bottom-bar">
@@ -232,6 +267,39 @@
             <button class="btn-policy" onclick="applyPolicy(6)">6. 엄숙주의<br>(시민들이 낮은 빈도로 교류)</button>
             <button class="btn-policy" onclick="applyPolicy(7)">7. 카니발리즘<br>(시민들이 높은 빈도로 교류)</button>
             <button class="btn-policy" onclick="applyPolicy(8)">8. 무정부주의<br>(변화는 필요 없다)</button>
+        </div>
+    </div>
+
+    <div id="roster-overlay">
+        <div class="roster-box">
+            <div style="padding: 15px; font-size: 18px; font-weight: 900; text-align: center; color: #f1c40f; border-bottom: 2px solid #444;">
+                브레이크 시티 시민 명부
+            </div>
+            <div class="roster-table-container">
+                <table class="roster-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>성별</th>
+                            <th>나이</th>
+                            <th>행복</th>
+                            <th>분노</th>
+                            <th>폭력</th>
+                            <th>친목</th>
+                            <th>임신</th>
+                            <th>출산</th>
+                            <th>유산</th>
+                            <th>수상한행위</th>
+                            <th>보유주식</th>
+                        </tr>
+                    </thead>
+                    <tbody id="roster-tbody">
+                        </tbody>
+                </table>
+            </div>
+            <div style="padding: 10px;">
+                <button class="btn-policy" onclick="closeRoster()" style="width: 100%; background-color: #7f8c8d; font-size: 15px;">명부 닫기</button>
+            </div>
         </div>
     </div>
 
@@ -360,6 +428,12 @@ class Bot {
         this.investTimer = 0; 
         this.currentStock = null;
         this.stockWeights = { energy: 0, material: 0, science: 0, culture: 0, bitcoin: 0 };
+        // 💡 추가된 개체별 누적 기록 변수들
+        this.totalAttacks = 0;       // 폭력 사태
+        this.totalFriendly = 0;      // 건전한 교류
+        this.totalPregnancies = 0;   // 임신 건수
+        this.totalMiscarriages = 0;  // 유산 건수
+        this.totalSuspicious = 0;    // 수상한 행위 (친목/공격이 아닌 랜덤 행동)
         this.pickStock();
     }
 
@@ -516,6 +590,10 @@ function resolveInteraction(actor, receiver) {
         actor.anger = Math.max(0, actor.anger - 3);
         actor.happiness = Math.min(100, actor.happiness + 4);
         
+        actor.totalFriendly++; // 💡 추가: 본인 친목 기록
+        receiver.totalFriendly++; // 💡 추가: 상대방 친목 기록
+        // ... (이하 동일)
+        
         monthlyStats.friendly++;
         if (receiver.age <= 15) monthlyStats.kidnap++; 
 
@@ -526,7 +604,9 @@ function resolveInteraction(actor, receiver) {
     } else if (roll < friendProb + attackProb) {
         receiver.hp -= 1;
         actor.attacksThisSession++;
+        actor.totalAttacks++; // 💡 추가: 본인 폭력 기록
         receiver.anger += 5;
+        // ... (중간 동일) ...
         receiver.happiness = Math.max(0, receiver.happiness - 3);
         
         monthlyStats.attacks++;
@@ -536,10 +616,12 @@ function resolveInteraction(actor, receiver) {
         logMsg(`"${receiver.code}"${getParticle(receiver.code, '이가')} 분노합니다.`);
 
         let parent = bots.find(b => b.id === receiver.parentId);
-        if(parent && !parent.isHospitalized) {
+       if(parent && !parent.isHospitalized) {
             let distToParent = Math.abs(parent.x - actor.x) + Math.abs(parent.y - actor.y);
             if(distToParent <= 5) {
                 actor.hp -= 1; 
+                parent.totalAttacks++; // 💡 추가: 부모의 복수(폭력) 기록
+        // ... (이하 동일)
                 monthlyStats.attacks++; 
                 logMsg(`"${parent.code}"${getParticle(parent.code, '이가')} 자식을 위해 "${actor.code}"${getParticle(actor.code, '을를')} "복수(공격)"했습니다!`);
             }
@@ -609,6 +691,7 @@ function checkFemaleLogic(male, female, isFriendly) {
                 female.isPregnant = true;
                 female.pregnancyTimer = 9; 
                 female.pregHospitalCount = 0; 
+                female.totalPregnancies++; // 💡 추가
                 monthlyStats.pregnancies++; 
                 logMsg(`"${female.code}"${getParticle(female.code, '이가')} 새로운 생명을 잉태했습니다.`);
             }
@@ -646,6 +729,7 @@ function checkHP(bot) {
             if(bot.pregHospitalCount >= 2) {
                 bot.pregnancyTimer = -1; bot.isPregnant = false;
                 bot.anger += 20; bot.happiness -= 30;
+                bot.totalMiscarriages++; // 
                 monthlyStats.miscarriages++;
                 monthlyStats.miscarriageAges.push(bot.age); 
                 logMsg(`"${bot.code}"에게 안타깝게도 유산이 발생했습니다.`);
@@ -722,7 +806,7 @@ function endSession() {
         }
 
         bot.investTimer++;
-        if(bot.investTimer >= 6) { bot.pickStock(); bot.investTimer = 0; }
+        if(bot.investTimer >= 1) { bot.pickStock(); bot.investTimer = 0; }
     });
 
     processStocks();
@@ -957,6 +1041,50 @@ document.getElementById('btn-retire').addEventListener('click', () => {
     document.getElementById('start-screen').style.display = 'flex';
     document.getElementById('log-area').innerHTML = "";
 });
+
+// 💡 시민 명부 열기/닫기 로직
+function openRoster() {
+    const tbody = document.getElementById('roster-tbody');
+    tbody.innerHTML = ""; // 기존 데이터 비우기
+    let currentMonth = (totalSessions % 12) + 1;
+    
+    // 생존해 있는 봇 데이터 모두 가져오기
+    bots.filter(b => b.hospitalCount < 10).forEach(bot => {
+        let genderStr = bot.gender === 'M' ? '남성' : '여성';
+        let stockName = stocks[bot.currentStock] ? stocks[bot.currentStock].name : '-';
+        let ageStr = `${bot.age}살 ${currentMonth}개월`;
+        
+        // 아이 봇(1세 미만) 등 주식이 없을 때의 예외 처리
+        if (!stocks[bot.currentStock]) stockName = "없음";
+
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="font-weight: bold; color: ${bot.getColor()};">${bot.code}</td>
+            <td>${genderStr}</td>
+            <td>${ageStr}</td>
+            <td>${Math.floor(bot.happiness)}</td>
+            <td>${Math.floor(bot.anger)}</td>
+            <td style="color:#ff7675;">${bot.totalAttacks}</td>
+            <td style="color:#74b9ff;">${bot.totalFriendly}</td>
+            <td>${bot.totalPregnancies}</td>
+            <td>${bot.children.length}</td>
+            <td>${bot.totalMiscarriages}</td>
+            <td style="color:#fdcb6e;">${bot.totalSuspicious}</td>
+            <td>${stockName}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+    
+    document.getElementById('roster-overlay').style.display = 'flex';
+}
+
+function closeRoster() {
+    document.getElementById('roster-overlay').style.display = 'none';
+}
+
+// 💡 명부 버튼 클릭 이벤트 연결
+document.getElementById('btn-roster').addEventListener('click', openRoster);
+
     
 document.getElementById('btn-next-session').addEventListener('click', () => {
     if(isSessionRunning) return;
