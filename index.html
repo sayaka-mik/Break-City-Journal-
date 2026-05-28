@@ -34,6 +34,27 @@
         .btn-large { background-color: #2a2a35; color: white; border: 2px solid #444; padding: 15px 30px; font-size: 20px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
         .btn-large:hover { background-color: #444; border-color: #777; }
 
+        /* ---------------- 가이드 화면 ---------------- */
+        #guide-screen {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #111111; z-index: 90;
+            flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+        }
+        .guide-box {
+            background-color: #232618; color: #eeeeee;
+            width: 100%; padding: 20px; border-radius: 8px; border: 1px solid #444;
+            font-size: 13px; line-height: 1.6; margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        .guide-title {
+            font-size: 20px; font-weight: 900; color: #f1c40f; text-align: center; margin-bottom: 15px;
+        }
+        .guide-list {
+            list-style-type: none; padding: 0; margin: 0;
+        }
+        .guide-list li { margin-bottom: 8px; position: relative; padding-left: 12px; }
+        .guide-list li::before { content: "-"; position: absolute; left: 0; color: #f1c40f; }
+
         /* 메인 화면 UI */
         #game-screen { display: none; flex-direction: column; height: 100%; width: 100%; } /* 💡 이 줄이 삭제되었었습니다! 다시 추가! */
         
@@ -143,6 +164,26 @@
         <div class="logo-subtitle">브레이크 시티 저널</div>
         <button class="btn-large" id="btn-start"><span style="font-size:28px">📑</span> 저널 읽기</button>
     </div>
+    
+        <div id="guide-screen">
+        <div class="guide-box">
+            <div class="guide-title">게임 룰 안내</div>
+            <ul class="guide-list">
+                <li>당신은 개척촌 브레이크 시티의 신임 시장입니다.</li>
+                <li>브레이크 시티는 20살의 남녀 100명으로 이루어진 도시입니다.</li>
+                <li>1달에 1번 정책을 결정합니다.</li>
+                <li>1번의 정책은 1달간 유지됩니다.</li>
+                <li>시민은 12달마다 나이를 먹습니다.</li>
+                <li>여성의 임신 기간은 9달입니다.</li>
+                <li>폭력 사태에 시달리는 시민은 병원에 실려갑니다.</li>
+                <li>건강악화가 누적된 시민은 사망합니다.</li>
+                <li>이 도시의 모든 시민은 5가지 주식 중 하나에 투자를 합니다.</li>
+                <li>시민간의 교류(긍정적이든, 부정적이든)는 행복과 스트레스 수치에 영향을 받습니다.</li>
+            </ul>
+        </div>
+        <button class="btn-large" id="btn-start-game"><span style="font-size:24px">⚙️</span> 시뮬레이션 시작</button>
+    </div>
+
 
     <div id="game-screen">
         <div id="top-bar">
@@ -196,7 +237,7 @@
     </div>
 
     <div id="policy-overlay">
-        <div class="policy-title">새로운 정책 수립<br><span style="font-size:14px; color:#ccc;">(12세션간 유지됩니다)</span></div>
+        <div class="policy-title">새로운 정책 수립<br><span style="font-size:14px; color:#ccc;">(1세션간 유지됩니다)</span></div>
         <div class="policy-grid">
             <button class="btn-policy" onclick="applyPolicy(1)">1. 엄벌주의<br>(경찰이 폭력범을 폭행)</button>
             <button class="btn-policy" onclick="applyPolicy(2)">2. 기업규제<br>(랜덤 주식을 규제함)</button>
@@ -528,12 +569,8 @@ function resolveInteraction(actor, receiver) {
 function getSecretaryComment() {
     let pool = [];
     
-    // 1. 상시 표출 가능
-    pool.push("시장님, 이번 달도 무사히 넘기셨군요.");
-    
-    // 2. 산모의 분노 (유산 발생 시, 해당 나이 참조)
+    // 2. 산모의 분노 
     if (monthlyStats.miscarriages > 0 && monthlyStats.miscarriageAges.length > 0) {
-        // 유산한 봇들 중 무작위 1명의 나이를 뽑아옴
         let rndAge = monthlyStats.miscarriageAges[Math.floor(Math.random() * monthlyStats.miscarriageAges.length)];
         pool.push(`시장님, 폭력사태로 아이를 잃은 ${rndAge}세 여성이 청사 앞에서 1인 시위를 시작했습니다.`);
     }
@@ -558,7 +595,12 @@ function getSecretaryComment() {
         pool.push("분노 바이러스라고 아십니까? *퍽*");
     }
 
-    // 모인 문장(풀) 중 랜덤 1개 반환
+    // 💡 1. 비서의 권태 (다른 이슈가 전혀 없을 때만 등장)
+    if (pool.length === 0) {
+        return "시장님, 이번 달도 무사히 넘기셨군요.";
+    }
+
+    // 조건에 맞는 문장이 여러 개라면 그 중 랜덤 1개 반환
     return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -756,17 +798,6 @@ function endSession() {
     document.getElementById('report-overlay').style.display = 'flex';
 }
 
-// ---------------- 보고서 닫기 버튼 이벤트 ----------------
-document.getElementById('btn-close-report').addEventListener('click', () => {
-    document.getElementById('report-overlay').style.display = 'none';
-    resetMonthlyStats(); // 다음 달을 위해 통계 초기화
-
-    // 12개월 째라면 정책 오버레이 띄우기
-    if (totalSessions % 12 === 0) {
-        document.getElementById('policy-overlay').style.display = 'flex';
-    }
-});
-
 function processStocks() {
     for(let k in stocks) { stocks[k].failMod = 0; stocks[k].succMod = 0; }
 
@@ -789,7 +820,7 @@ function processStocks() {
 }
 
 function applyPolicy(num) {
-    activePolicy = num; policyTimer = 12; 
+    activePolicy = num; policyTimer = 1; 
     P_PREG_REQ = 5; P_COOLDOWN = 10; P_STRICT_PUNISH = false;
 
     let keys = Object.keys(stocks);
@@ -837,11 +868,26 @@ function updateUI() {
     document.getElementById('ui-pop').innerText = bots.length;
 }
 
+// 💡 기존 btn-start 덮어쓰기 (인트로 -> 가이드 화면으로 이동)
 document.getElementById('btn-start').addEventListener('click', () => {
     document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('guide-screen').style.display = 'flex';
+});
+
+// 💡 새로 추가 (가이드 화면 -> 게임 화면 시작)
+document.getElementById('btn-start-game').addEventListener('click', () => {
+    document.getElementById('guide-screen').style.display = 'none';
     document.getElementById('game-screen').style.display = 'flex';
     initGame(); 
-    // 첫 시작 시엔 정책창 띄우기 (보고서 패스)
+    document.getElementById('policy-overlay').style.display = 'flex'; // 첫 달 정책 수립
+});
+
+// 💡 기존 보고서 닫기 버튼 덮어쓰기 (매달 닫을 때마다 정책창 띄우기)
+document.getElementById('btn-close-report').addEventListener('click', () => {
+    document.getElementById('report-overlay').style.display = 'none';
+    resetMonthlyStats(); 
+    
+    // 12개월 조건(if 문) 삭제 -> 이제 매달 닫을 때마다 무조건 정책 오버레이 띄움
     document.getElementById('policy-overlay').style.display = 'flex';
 });
 
