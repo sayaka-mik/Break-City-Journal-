@@ -172,34 +172,28 @@
         /* ---------------- 서사시 엔딩 화면 ---------------- */
         #epic-screen { 
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: #111; z-index: 200; flex-direction: column; padding: 20px; box-sizing: border-box; overflow-y: auto; color: #eee; 
+            background: #111; z-index: 200; flex-direction: column; padding: 20px; box-sizing: border-box; color: #eee; 
         }
         .epic-header { color: #f1c40f; text-align: center; border-bottom: 2px solid #555; padding-bottom: 10px; font-size: 24px; font-weight: 900; margin-top: 10px; }
-        .epic-hof { margin-bottom: 20px; background: #222; padding: 15px; border-radius: 8px; border: 1px solid #444; }
-        .epic-log { font-size: 12px; line-height: 1.6; color: #ccc; background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid #333; flex: 1; overflow-y: auto; }
+        
+        /* 💡 명예의 전당 스크롤 추가 */
+        .epic-hof { 
+            margin-bottom: 20px; background: #222; padding: 15px; border-radius: 8px; border: 1px solid #444;
+            overflow-y: auto; flex: 1; /* 화면 크기에 맞춰 늘어나고 내부 스크롤 됨 */
+        }
+        
+        /* 💡 추가된 상세 역사서 오버레이 스타일 */
+        #epic-log-overlay {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.95); z-index: 250;
+            flex-direction: column; padding: 20px; box-sizing: border-box;
+        }
+        .epic-log-box {
+            flex: 1; overflow-y: auto; background: #1a1a1a; padding: 15px;
+            border-radius: 8px; border: 1px solid #444; font-size: 12px; line-height: 1.6; color: #ccc;
+            margin-bottom: 15px;
+        }
 
-        /* 🎵 인트로 최상단 볼륨 컨트롤 스타일 */
-        #volume-control-container {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background-color: rgba(0, 0, 0, 0.6);
-            padding: 8px 16px;
-            border-radius: 30px;
-            border: 1px solid #444;
-            z-index: 110; /* 인트로 요소들보다 위에 배치 */
-        }
-        #volume-slider {
-            flex: 1;
-            accent-color: #8e44ad; /* 보라색 포인트 */
-            cursor: pointer;
-            height: 6px;
-            border-radius: 3px;
-        }
 
     </style>
 </head>
@@ -217,6 +211,67 @@
         <button class="btn-large" id="btn-start"><span style="font-size:28px">📑</span> 저널 읽기</button>
         <button class="btn-large" id="btn-start-epic" style="background-color: #8e44ad; border-color: #9b59b6; margin-top: 10px;"><span style="font-size:24px">🤖</span> 서사시 읽기 (자동)</button>
     </div>
+    
+        <div id="auto-setup-screen" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:#111; z-index:150; flex-direction:column; padding:20px; box-sizing:border-box; color:#eee;">
+        <div class="epic-header" style="margin-top:0;">⚙️ 제1대 시장 성향 설정</div>
+        <div class="setup-box" style="flex:1; overflow-y:auto; background:#222; padding:15px; border-radius:8px; border:1px solid #444; margin-bottom:15px;">
+            <div style="font-size:11px; color:#aaa; margin-bottom:15px; line-height:1.4;">자동진행 AI의 초기 판단 기준을 직접 설정합니다.<br>이후 5년(60개월)마다 취임하는 후임 시장들은 이 설정값을 유전받아 성향이 미세하게(±2) 변동됩니다.</div>
+
+            <div style="margin-bottom:15px; border-bottom:1px dashed #444; padding-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold; color:#f1c40f; margin-bottom:5px;"><span>1. 엄벌주의 (폭력 한계점)</span> <span id="val_p1">10%</span></div>
+                <div style="font-size:11px; color:#ccc; margin-bottom:5px;">월간 폭력 발생이 인구의 N%를 초과하면 발동</div>
+                <input type="range" id="inp_p1" min="1" max="100" value="10" style="width:100%; accent-color:#8e44ad;" oninput="document.getElementById('val_p1').innerText=this.value+'%'">
+            </div>
+
+            <div style="margin-bottom:15px; border-bottom:1px dashed #444; padding-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold; color:#f1c40f; margin-bottom:5px;"><span>2. 기업규제 (정기 발동)</span> <span id="val_p2">10개월</span></div>
+                <div style="font-size:11px; color:#ccc; margin-bottom:5px;">다른 이슈가 없을 시 N개월마다 무작위 규제</div>
+                <input type="range" id="inp_p2" min="1" max="60" value="10" style="width:100%; accent-color:#8e44ad;" oninput="document.getElementById('val_p2').innerText=this.value+'개월'">
+            </div>
+
+            <div style="margin-bottom:15px; border-bottom:1px dashed #444; padding-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold; color:#f1c40f; margin-bottom:5px;"><span>3. 기관투자 (성비 편향/정기)</span></div>
+                <div style="font-size:11px; color:#ccc; margin-bottom:5px;">단일 성별이 <span id="val_p3_g">80%</span> 초과 시 / <span id="val_p3_s">6개월</span> 마다 발동</div>
+                <input type="range" id="inp_p3_g" min="50" max="100" value="80" style="width:100%; accent-color:#8e44ad; margin-bottom:5px;" oninput="document.getElementById('val_p3_g').innerText=this.value+'%'">
+                <input type="range" id="inp_p3_s" min="1" max="60" value="6" style="width:100%; accent-color:#8e44ad;" oninput="document.getElementById('val_p3_s').innerText=this.value+'개월'">
+            </div>
+
+            <div style="margin-bottom:15px; border-bottom:1px dashed #444; padding-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold; color:#f1c40f; margin-bottom:5px;"><span>4. 이주정책 (인구 하한/급감/정기)</span></div>
+                <div style="font-size:11px; color:#ccc; margin-bottom:5px;">인구 <span id="val_p4_p">100명</span> 이하 / <span id="val_p4_d">20%</span> 감소 / <span id="val_p4_s">13개월</span> 주기</div>
+                <input type="range" id="inp_p4_p" min="10" max="200" value="100" style="width:100%; accent-color:#8e44ad; margin-bottom:5px;" oninput="document.getElementById('val_p4_p').innerText=this.value+'명'">
+                <input type="range" id="inp_p4_d" min="1" max="100" value="20" style="width:100%; accent-color:#8e44ad; margin-bottom:5px;" oninput="document.getElementById('val_p4_d').innerText=this.value+'%'">
+                <input type="range" id="inp_p4_s" min="1" max="60" value="13" style="width:100%; accent-color:#8e44ad;" oninput="document.getElementById('val_p4_s').innerText=this.value+'개월'">
+            </div>
+
+            <div style="margin-bottom:15px; border-bottom:1px dashed #444; padding-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold; color:#f1c40f; margin-bottom:5px;"><span>5. 성개방주의 (출산 저조)</span> <span id="val_p5">10%</span></div>
+                <div style="font-size:11px; color:#ccc; margin-bottom:5px;">최근 20개월 출산이 인구의 N% 미만 시 발동</div>
+                <input type="range" id="inp_p5" min="1" max="100" value="10" style="width:100%; accent-color:#8e44ad;" oninput="document.getElementById('val_p5').innerText=this.value+'%'">
+            </div>
+
+            <div style="margin-bottom:15px; border-bottom:1px dashed #444; padding-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold; color:#f1c40f; margin-bottom:5px;"><span>6. 엄숙주의 (사망자 갱신)</span> <span id="val_p6">10명</span></div>
+                <div style="font-size:11px; color:#ccc; margin-bottom:5px;">누적 사망자가 N명 증가할 때마다 발동</div>
+                <input type="range" id="inp_p6" min="1" max="100" value="10" style="width:100%; accent-color:#8e44ad;" oninput="document.getElementById('val_p6').innerText=this.value+'명'">
+            </div>
+
+            <div style="margin-bottom:15px; border-bottom:1px dashed #444; padding-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold; color:#f1c40f; margin-bottom:5px;"><span>7. 카니발리즘 (교류 저조)</span> <span id="val_p7">15%</span></div>
+                <div style="font-size:11px; color:#ccc; margin-bottom:5px;">월간 친목 발생이 인구의 N% 미만 시 발동</div>
+                <input type="range" id="inp_p7" min="1" max="100" value="15" style="width:100%; accent-color:#8e44ad;" oninput="document.getElementById('val_p7').innerText=this.value+'%'">
+            </div>
+
+            <div style="margin-bottom:5px;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold; color:#f1c40f; margin-bottom:5px;"><span>8. 무정부주의 (정기 발동)</span> <span id="val_p8">12개월</span></div>
+                <div style="font-size:11px; color:#ccc; margin-bottom:5px;">N개월 주기로 무조건 발동</div>
+                <input type="range" id="inp_p8" min="1" max="60" value="12" style="width:100%; accent-color:#8e44ad;" oninput="document.getElementById('val_p8').innerText=this.value+'개월'">
+            </div>
+        </div>
+        <button class="btn-large" id="btn-start-auto-custom" style="width:100%; background-color:#8e44ad; justify-content:center;">시뮬레이션 가동</button>
+        <button class="btn-large" onclick="document.getElementById('auto-setup-screen').style.display='none'; document.getElementById('start-screen').style.display='flex';" style="width:100%; background-color:#555; margin-top:10px; justify-content:center;">뒤로 가기</button>
+    </div>
+
     
     <audio id="bgm" src="bgm.mp3" loop></audio>
 
@@ -362,10 +417,15 @@
     <div id="epic-screen">
         <div class="epic-header">📜 브레이크 시티 서사시</div>
         <div id="epic-hof" class="epic-hof"></div>
-        <div id="epic-log" class="epic-log"></div>
-        <button class="btn-large" onclick="closeEpic()" style="margin-top:20px; width:100%; background-color:#c0392b; justify-content:center;">역사서 덮고 메인으로</button>
+        <button class="btn-large" onclick="openEpicLog()" style="margin-top:10px; width:100%; background-color:#2980b9; justify-content:center;">📖 상세 역사서 열람</button>
+        <button class="btn-large" onclick="closeEpic()" style="margin-top:10px; width:100%; background-color:#c0392b; justify-content:center;">역사서 덮고 메인으로</button>
     </div>
-</div>
+
+    <div id="epic-log-overlay">
+        <div class="epic-header" style="margin-top:0;">📖 상세 역사서</div>
+        <div id="epic-log-content" class="epic-log-box"></div>
+        <button class="btn-large" onclick="closeEpicLog()" style="width:100%; background-color:#7f8c8d; justify-content:center;">닫기</button>
+    </div>
 
 <script>
 const GRID_SIZE = 50;
@@ -430,7 +490,8 @@ let birthHistory = [];      // 최근 20달 출산
 let totalDeadCount = 0;     // 누적 사망자
 let lastDeadStepThreshold = 0; 
 let currentRuler = 1;
-let rulerStats = [{ruler: 1, attacks: 0, births: 0}];
+let rulerStats = [{ruler: 1, attacks: 0, births: 0, deaths: 0, immigrants: 0}];
+let firstBloodBotName = null; // 💡 퍼스트 블러드 기록용
 
 let currentTriggers = {
     p1_attackPct: 10, p2_session: 10, p3_genderPct: 80, p3_session: 6,
@@ -478,9 +539,12 @@ function getEmptyPos() {
 }
 
 class Bot {
-    constructor(age, gender, x, y) {
+    constructor(age, gender, x, y, bloodline = 1.0, ancestorArrival = 0) { // 💡 파라미터 추가
         this.id = botIdCounter++;
         this.code = `${gender}-${String(this.id).padStart(4, '0')}`;
+        // 💡 혈통 및 뿌리 추적 변수
+        this.bloodline = bloodline; 
+        this.ancestorArrival = ancestorArrival; 
         this.x = x; this.y = y;
         this.age = age; this.gender = gender;
         this.maxHp = (this.age >= 50) ? 2 : 3;
@@ -500,6 +564,7 @@ class Bot {
         this.maleInteractTracker = {}; 
         this.children = [];
         this.parentId = null; 
+        this.pregnancyFatherId = null;
         
         this.attacksThisSession = 0;
         this.investTimer = 0; 
@@ -800,11 +865,12 @@ function checkFemaleLogic(male, female, isFriendly) {
             tracker.count = 1; tracker.firstSession = totalSessions;
         } else {
             tracker.count++;
-            if(tracker.count >= P_PREG_REQ) { 
+                        if(tracker.count >= P_PREG_REQ) { 
                 female.isPregnant = true;
                 female.pregnancyTimer = 9; 
                 female.pregHospitalCount = 0; 
-                female.totalPregnancies++; // 💡 추가
+                female.totalPregnancies++; 
+                female.pregnancyFatherId = male.id; // 💡 이 줄 추가! (아빠 유전자 기록)
                 monthlyStats.pregnancies++; 
                 logMsg(`"${female.code}"${getParticle(female.code, '이가')} 새로운 생명을 잉태했습니다.`);
             }
@@ -819,14 +885,26 @@ function doBirth(female) {
     
     let gender = Math.random() > 0.5 ? 'M' : 'F';
     let pos = getEmptyPos();
-    let child = new Bot(1, gender, pos.x, pos.y);
+    
+    // 💡 혈통(Bloodline) 계산 로직
+    let father = globalBotRegistry.find(b => b.id === female.pregnancyFatherId);
+    let fBlood = father ? father.bloodline : 0; 
+    let fArrival = father ? father.ancestorArrival : totalSessions;
+    
+    let childBlood = (female.bloodline + fBlood) / 2; // 엄마 아빠 피 반반
+    let childArrival = Math.min(female.ancestorArrival, fArrival); // 더 오래된 조상의 뿌리 연도 따라감
+
+    let child = new Bot(1, gender, pos.x, pos.y, childBlood, childArrival);
+    
     child.parentId = female.id;
     female.children.push(child.id);
+    female.pregnancyFatherId = null; // 아빠 기록 지우기
     bots.push(child);
     
     monthlyStats.births++; 
     logMsg(`"${female.code}"${getParticle(female.code, '이가')} 새로운 봇(${child.code}, 1세)${getParticle(child.code, '을를')} 출산했습니다!`);
 }
+
 
 function checkHP(bot) {
     if (P_STRICT_PUNISH && bot.attacksThisSession >= 2) bot.hp = 0;
@@ -849,10 +927,12 @@ function checkHP(bot) {
             }
         }
 
-        if (bot.hospitalCount >= 10) {
+                if (bot.hospitalCount >= 10) {
             monthlyStats.deadBots.push(bot.code); 
-            totalDeadCount++; // 💡 추가: 누적 사망자 기록 (엄숙주의 트리거용)
-            logMsg(`"${bot.code}"${getParticle(bot.code, '이가')} 누적 병원 10회로 사망했습니다.`);
+            totalDeadCount++; 
+            if (!firstBloodBotName) firstBloodBotName = bot.code; // 💡 퍼스트 블러드 기록
+            rulerStats[currentRuler-1].deaths += 1; // 💡 미치광이 시장 기록용
+            logMsg(`"${bot.code}"${getParticle(bot.code, '이가')} 누적된 시달림으로 사망했습니다.`);
         }
     }
 }
@@ -1092,10 +1172,12 @@ function applyPolicy(num, stockKey = null) {
         case 4: 
             for(let i=0; i<10; i++) {
                 let pos = getEmptyPos(); let g = Math.random() > 0.5 ? 'M' : 'F'; let a = Math.floor(Math.random() * 40) + 10;
-                let newBot = new Bot(a, g, pos.x, pos.y);
+                // 💡 이주민은 피가 0% (0.0) 이고 현재 세션을 뿌리로 가짐
+                let newBot = new Bot(a, g, pos.x, pos.y, 0.0, totalSessions); 
                 bots.push(newBot);
                 logMsg(`[이주정책] 새로운 봇 "${newBot.code}"${getParticle(newBot.code, '이가')} 도시에 합류했습니다.`);
             } 
+            rulerStats[currentRuler-1].immigrants += 10; // 💡 간첩 시장 기록용
             logMsg(`새로운 정책 [4번 이주정책]이 수립되었습니다.`);
             break;
         case 5: P_PREG_REQ = 3; logMsg(`새로운 정책 [5번 성개방주의]가 수립되었습니다.`); break;
@@ -1319,8 +1401,13 @@ function doAutoPolicy() {
     let pNames = ["", "엄벌주의", "기업규제", "기관투자", "이주정책", "성개방주의", "엄숙주의", "카니발리즘", "무정부주의"];
     let rKeys = ['attacks', 'friendly', 'hospitalized', 'births', 'miscarriages'];
     let rK = rKeys[Math.floor(Math.random() * rKeys.length)];
-    epicLogs.push(`- <b>${Math.floor(totalSessions/12)}년 ${(totalSessions%12)+1}월</b>: ${pNames[selected.num]} 채택 (${selected.reason}) / 주요지표 [${rK}]: ${monthlyStats[rK]}`);
+    
+    // 💡 주요지표 한국어 변환 맵 매칭
+    let koMap = { attacks: "폭력사태", friendly: "친목", hospitalized: "병원행", births: "출산", miscarriages: "유산" };
+    
+    epicLogs.push(`- <b>${Math.floor(totalSessions/12)}년 ${(totalSessions%12)+1}월</b>: ${pNames[selected.num]} 채택 (${selected.reason}) / 주요지표 [${koMap[rK]}]: ${monthlyStats[rK]}`);
 }
+
 
 function autoPlayNextMonth() {
     if (!isAutoMode) return;
@@ -1338,22 +1425,44 @@ function autoPlayNextMonth() {
 }
 
 // 💡 모드 진입 및 킬 버튼 이벤트
+// (1) 서사시 시작 버튼 누르면 세팅 화면으로 이동
 document.getElementById('btn-start-epic').addEventListener('click', () => {
-    isAutoMode = true; 
     document.getElementById('start-screen').style.display = 'none'; 
+    document.getElementById('auto-setup-screen').style.display = 'flex';
+});
+
+// (2) 세팅 완료 후 가동 버튼 누르면 시작
+document.getElementById('btn-start-auto-custom').addEventListener('click', () => {
+    // 플레이어가 설정한 UI 슬라이더 값 가져와서 시스템에 덮어쓰기
+    currentTriggers.p1_attackPct = parseInt(document.getElementById('inp_p1').value);
+    currentTriggers.p2_session = parseInt(document.getElementById('inp_p2').value);
+    currentTriggers.p3_genderPct = parseInt(document.getElementById('inp_p3_g').value);
+    currentTriggers.p3_session = parseInt(document.getElementById('inp_p3_s').value);
+    currentTriggers.p4_popMax = parseInt(document.getElementById('inp_p4_p').value);
+    currentTriggers.p4_popDropPct = parseInt(document.getElementById('inp_p4_d').value);
+    currentTriggers.p4_session = parseInt(document.getElementById('inp_p4_s').value);
+    currentTriggers.p5_birthPct = parseInt(document.getElementById('inp_p5').value);
+    currentTriggers.p6_deadStep = parseInt(document.getElementById('inp_p6').value);
+    currentTriggers.p7_friendPct = parseInt(document.getElementById('inp_p7').value);
+    currentTriggers.p8_session = parseInt(document.getElementById('inp_p8').value);
+
+    isAutoMode = true; 
+    document.getElementById('auto-setup-screen').style.display = 'none';
     document.getElementById('game-screen').style.display = 'flex';
     document.getElementById('btn-kill').style.display = 'inline-block'; 
     
     initGame(); 
-    mutateTriggers(); // 제1대 시장 초기화
+    
+    // 💡 제1대 시장은 mutate(랜덤 변동) 없이 유저 커스텀 값 그대로 취임 기록!
+    regimeLogs.push(`================================<br>🏛️ [0년 1월] 제1대 시장 취임!<br> (초기 커스텀 설정: 엄벌 ${currentTriggers.p1_attackPct}%, 성개방 ${currentTriggers.p5_birthPct}%, 이주 인구하한 ${currentTriggers.p4_popMax}명 등 적용)`);
+    
     document.getElementById('btn-next-session').click(); // 첫 달 굴리기
 });
 
 document.getElementById('btn-kill').addEventListener('click', () => { 
-    if(confirm("자동 통치를 중단하고 역사서를 쓰시겠습니까?")) showEpicEnding(); 
+    if(confirm("참칭자를 처단하고 역사서를 쓰시겠습니까?")) showEpicEnding(); 
 });
 
-// 💡 서사시 출력 및 초기화
 function showEpicEnding() {
     isAutoMode = false; clearInterval(sessionInterval);
     document.getElementById('game-screen').style.display = 'none'; document.getElementById('epic-screen').style.display = 'flex';
@@ -1364,8 +1473,30 @@ function showEpicEnding() {
     let mostSuspiciousBot = [...globalBotRegistry].sort((a,b)=>b.totalSuspicious - a.totalSuspicious)[0];
     let lowestAttackRuler = [...rulerStats].sort((a,b)=>a.attacks - b.attacks)[0];
     let highestBirthRuler = [...rulerStats].sort((a,b)=>b.births - a.births)[0];
+    
+    // 💡 신규 명예의 전당 항목 계산
+    let highestDeathRuler = [...rulerStats].sort((a,b)=>b.deaths - a.deaths)[0];
+    let highestImmigrantRuler = [...rulerStats].sort((a,b)=>b.immigrants - a.immigrants)[0];
 
-    // 💡 배열이 비어있을 때 터지는 버그 수정
+    // 혈통 계산 (현재 생존자 중)
+    let survivors = bots; 
+    let bloodText = "기록없음";
+    if (survivors.length > 0) {
+        let maxBloodBot = [...survivors].sort((a,b) => b.bloodline - a.bloodline)[0];
+        if (maxBloodBot.bloodline === 1.0) {
+            bloodText = `[퓨어블러드] ${maxBloodBot.code} (원년 멤버 100% 직계)`;
+        } else if (maxBloodBot.bloodline > 0) {
+            bloodText = `[니어블러드] ${maxBloodBot.code} (원조 혈통 ${(maxBloodBot.bloodline * 100).toFixed(1)}% 보존)`;
+        } else {
+            // 모두가 이민자 피 100% 라면 가장 오래된 조상을 둔 녀석을 찾음
+            let nativeBot = [...survivors].sort((a,b) => a.ancestorArrival - b.ancestorArrival)[0];
+            let aYear = Math.floor(nativeBot.ancestorArrival/12); let aMonth = (nativeBot.ancestorArrival%12)+1;
+            bloodText = `[토박이] ${nativeBot.code} (${aYear}년 ${aMonth}월 유입된 조상의 후손)`;
+        }
+    } else {
+        bloodText = "도시 전멸 (생존자 없음)";
+    }
+
     let maxCon = 0; let curCon = 1; let maxPol = 8;
     if (policyHistory.length > 0) {
         maxPol = policyHistory[0];
@@ -1384,17 +1515,18 @@ function showEpicEnding() {
     let leastText = policyHistory.length > 0 ? `${pNames[leastPol]} (총 ${minCount}회)` : "기록없음";
     
     document.getElementById('epic-hof').innerHTML = `
-        <h3 style="color:#e67e22; margin-top:0;">🏆 명예의 전당</h3>
+        <h3 style="color:#e67e22; margin-top:0; position: sticky; top: -15px; background: #222; padding-bottom: 5px;">🏆 명예의 전당</h3>
         <ul style="list-style:none; padding:0; margin:0; font-size:13px; line-height:1.8;">
-            <li><b>최장수 개체:</b> ${oldest ? `${oldest.code} (${oldest.age}세)` : '기록없음'}</li>
-            <li><b>최고 평화 통치자:</b> 제${lowestAttackRuler ? lowestAttackRuler.ruler : 1}대 시장 (재임중 폭력 ${lowestAttackRuler ? lowestAttackRuler.attacks : 0}건)</li>
-            <li><b>최고 번영 통치자:</b> 제${highestBirthRuler ? highestBirthRuler.ruler : 1}대 시장 (재임중 출산 ${highestBirthRuler ? highestBirthRuler.births : 0}명)</li>
+            <li><b>퍼스트 블러드:</b> <span style="color:#e74c3c;">${firstBloodBotName ? firstBloodBotName : '없음'}</span> (최초 사망자)</li>
+            <li><b>브레이크 시티의 핏줄:</b> <span style="color:#f1c40f;">${bloodText}</span></li>
+            <li style="border-top:1px dashed #555; margin-top:5px; padding-top:5px;"><b>미치광이 시장:</b> 제${highestDeathRuler ? highestDeathRuler.ruler : 1}대 (임기 중 <span style="color:#e74c3c;">사망 ${highestDeathRuler ? highestDeathRuler.deaths : 0}명</span>)</li>
+            <li><b>간첩 의심 시장:</b> 제${highestImmigrantRuler ? highestImmigrantRuler.ruler : 1}대 (임기 중 <span style="color:#3498db;">이민 수용 ${highestImmigrantRuler ? highestImmigrantRuler.immigrants : 0}명</span>)</li>
+            <li><b>최고 평화 통치자:</b> 제${lowestAttackRuler ? lowestAttackRuler.ruler : 1}대 (임기 중 폭력 ${lowestAttackRuler ? lowestAttackRuler.attacks : 0}건)</li> <li><b>최고 번영 통치자:</b> 제${highestBirthRuler ? highestBirthRuler.ruler : 1}대 (임기 중 출산 ${highestBirthRuler ? highestBirthRuler.births : 0}명)</li>
+            <li style="border-top:1px dashed #555; margin-top:5px; padding-top:5px;"><b>최장수 개체:</b> ${oldest ? `${oldest.code} (${oldest.age}세)` : '기록없음'}</li>
             <li><b>최다 출산 개체:</b> ${mostBirthsBot ? `${mostBirthsBot.code} (${mostBirthsBot.children.length}명)` : '기록없음'}</li>
             <li><b>최다 폭력 개체:</b> ${mostAttacksBot ? `${mostAttacksBot.code} (${mostAttacksBot.totalAttacks}회)` : '기록없음'}</li>
             <li><b>최다 기행(수상한행위):</b> ${mostSuspiciousBot ? `${mostSuspiciousBot.code} (${mostSuspiciousBot.totalSuspicious}회)` : '기록없음'}</li>
-            <li><b>최장 연속 채택 정책:</b> ${conText}</li>
-            <li><b>최소 채택 정책:</b> ${leastText}</li>
-        </ul>
+            <li style="border-top:1px dashed #555; margin-top:5px; padding-top:5px;"><b>최장 연속 채택 정책:</b> ${conText}</li> <li><b>최소 채택 정책:</b> ${leastText}</li> </ul>
     `;
 
     let logArr = []; let rIdx = 0;
@@ -1403,16 +1535,32 @@ function showEpicEnding() {
         logArr.push(`<div>${epicLogs[i]}</div>`);
     }
     if (logArr.length === 0) logArr.push(`<div style="color:#888;">(역사서에 남겨질 만한 시간이 흐르지 않았습니다.)</div>`);
-    document.getElementById('epic-log').innerHTML = logArr.join('');
+    
+    // 💡 로그 들어가는 타겟이 epic-log-content 로 변경됨!
+    document.getElementById('epic-log-content').innerHTML = logArr.join(''); 
+}
+
+// 💡 새로 추가된 오버레이 열기/닫기 함수
+function openEpicLog() {
+    document.getElementById('epic-log-overlay').style.display = 'flex';
+}
+function closeEpicLog() {
+    document.getElementById('epic-log-overlay').style.display = 'none';
 }
 
 
 function closeEpic() {
     document.getElementById('epic-screen').style.display = 'none';
-    isAutoMode = false; globalBotRegistry = []; epicLogs = []; regimeLogs = []; policyHistory = []; popHistory = []; birthHistory = []; totalDeadCount = 0; lastDeadStepThreshold = 0; currentRuler = 1; rulerStats = [{ruler: 1, attacks: 0, births: 0}]; 
+    isAutoMode = false; globalBotRegistry = []; epicLogs = []; regimeLogs = []; policyHistory = []; popHistory = []; birthHistory = []; 
+    totalDeadCount = 0; lastDeadStepThreshold = 0; currentRuler = 1; 
+    // 💡 초기화 데이터에 deaths, immigrants 추가, firstBlood 리셋
+    rulerStats = [{ruler: 1, attacks: 0, births: 0, deaths: 0, immigrants: 0}]; 
+    firstBloodBotName = null; 
+
     document.getElementById('btn-kill').style.display = 'none';
     document.getElementById('btn-retire').click(); 
 }
+
 
 // 💡 ─── 🎵 백그라운드 연산 유지용 BGM 로직 ───
 const bgm = document.getElementById('bgm');
