@@ -755,7 +755,7 @@ document.getElementById('btn-next-session').addEventListener('click', () => {
         executeTurn(); currentTurn++;
         if(currentTurn % 10 === 0) btn.innerHTML = `진행 중... ${Math.floor((currentTurn/300)*100)}%`;
         if(currentTurn >= 300) endSession();
-    }, 100); 
+    }, 50); 
 });
 </script>
 </body>
