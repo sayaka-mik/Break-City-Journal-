@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Break City Journal</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght=400;700;900&display=swap');
 
         body {
             margin: 0; padding: 0; background-color: #050505; color: #eeeeee;
@@ -34,40 +34,18 @@
         .btn-large { background-color: #2a2a35; color: white; border: 2px solid #444; padding: 15px 30px; font-size: 20px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
         .btn-large:hover { background-color: #444; border-color: #777; }
 
-        /* ---------------- 가이드 화면 ---------------- */
-        #guide-screen {
-            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #111111; z-index: 90;
-            flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
-        }
-        .guide-box {
-            background-color: #232618; color: #eeeeee;
-            width: 100%; padding: 20px; border-radius: 8px; border: 1px solid #444;
-            font-size: 13px; line-height: 1.6; margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-        }
-        .guide-title {
-            font-size: 20px; font-weight: 900; color: #f1c40f; text-align: center; margin-bottom: 15px;
-        }
-        .guide-list {
-            list-style-type: none; padding: 0; margin: 0;
-        }
-        .guide-list li { margin-bottom: 8px; position: relative; padding-left: 12px; }
-        .guide-list li::before { content: "-"; position: absolute; left: 0; color: #f1c40f; }
-
         /* 메인 화면 UI */
-        #game-screen { display: none; flex-direction: column; height: 100%; width: 100%; } /* 💡 이 줄이 삭제되었었습니다! 다시 추가! */
+        #game-screen { display: none; flex-direction: column; height: 100%; width: 100%; }
         
         #top-bar { 
             height: 60px; background-color: #1a1a24; 
-            display: grid; grid-template-columns: 1fr 1fr 1fr; /* 3등분 레이아웃으로 변경 */
+            display: grid; grid-template-columns: 1fr 1fr 1fr;
             align-items: center; padding: 0 15px; 
             font-size: 15px; font-weight: 700; border-bottom: 1px solid #333; 
         }
         .stat-text { color: #888; font-size: 12px; }
         .stat-value { color: #fff; }
 
-        /* 💡 추가된 퇴임 버튼 스타일 */
         .btn-retire {
             background-color: #962d2d;
             color: #ffffff;
@@ -77,12 +55,11 @@
             font-weight: bold;
             border-radius: 4px;
             cursor: pointer;
-            justify-self: center; /* 그리드 중앙 정렬 */
+            justify-self: center;
             transition: background-color 0.2s;
         }
-        .btn-retire:hover {
-            background-color: #bd3a3a;
-        }
+        .btn-retire:hover { background-color: #bd3a3a; }
+        
         #map-container { flex: 1; display: flex; justify-content: center; align-items: center; padding: 10px; background-color: #0a0a0f; }
         canvas { background-color: #151515; border: 1px solid #333; max-width: 100%; max-height: 100%; aspect-ratio: 1 / 1; object-fit: contain; }
         #bottom-bar { height: 80px; background-color: #1a1a24; display: flex; justify-content: center; align-items: center; border-top: 1px solid #333; padding: 10px; }
@@ -96,13 +73,13 @@
         /* ---------------- 보고서 오버레이 ---------------- */
         #report-overlay {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.85); /* 화면 전체는 어둡게 덮음 */
+            background-color: rgba(0, 0, 0, 0.85);
             z-index: 60; 
             flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
         }
         .report-box {
-            background-color: #3e422b; /* 짙은 카키색 (밀리터리/서류 느낌) */
-            color: #ffffff; /* 기본 글자색 흰색 */
+            background-color: #3e422b;
+            color: #ffffff;
             width: 100%; max-width: 380px; padding: 20px; border-radius: 8px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 2px solid #232618;
         }
@@ -113,11 +90,7 @@
             list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 14px; line-height: 1.8; font-weight: 700;
         }
         .report-list li { border-bottom: 1px dashed #6b734c; display: flex; justify-content: space-between; }
-        
-        .report-val { 
-            color: #ff4d4d; /* 수치는 밝고 강렬한 빨간색 */
-            font-weight: 900; 
-        }
+        .report-val { color: #ff4d4d; font-weight: 900; }
         
         .report-death-list { font-size: 11px; color: #cccccc; word-break: break-all; margin-top: -5px; margin-bottom: 5px; font-weight: 400; display: block; }
         .btn-close-report {
@@ -127,22 +100,29 @@
 
         /* 비서관의 한마디 스타일 */
         .report-secretary {
-            margin: 15px 0;
-            padding: 12px;
-            border: 2px solid #5a5266;
-            background-color: #4a4052; /* 퍼플그레이 */
+            margin: 15px 0; padding: 12px;
+            border: 2px solid #5a5266; background-color: #4a4052;
             border-radius: 6px;
         }
-        .sec-title {
-            font-size: 11px; color: #bbaacc; margin-bottom: 6px; font-weight: bold;
+        .sec-title { font-size: 11px; color: #bbaacc; margin-bottom: 6px; font-weight: bold; }
+        .sec-text { color: #00ff00; font-size: 13px; line-height: 1.5; word-break: keep-all; font-weight: bold; }
+
+        /* ---------------- 가이드 화면 ---------------- */
+        #guide-screen {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #111111; z-index: 90;
+            flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
         }
-        .sec-text {
-            color: #00ff00; /* 밝은 초록색 (레트로 터미널 느낌) */
-            font-size: 13px;
-            line-height: 1.5;
-            word-break: keep-all;
-            font-weight: bold;
+        .guide-box {
+            background-color: #232618; color: #eeeeee;
+            width: 100%; padding: 20px; border-radius: 8px; border: 1px solid #444;
+            font-size: 13px; line-height: 1.6; margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
+        .guide-title { font-size: 20px; font-weight: 900; color: #f1c40f; text-align: center; margin-bottom: 15px; }
+        .guide-list { list-style-type: none; padding: 0; margin: 0; }
+        .guide-list li { margin-bottom: 8px; position: relative; padding-left: 12px; }
+        .guide-list li::before { content: "-"; position: absolute; left: 0; color: #f1c40f; }
 
         /* ---------------- 정책 오버레이 ---------------- */
         #policy-overlay {
@@ -154,6 +134,14 @@
         .policy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
         .btn-policy { background-color: #2c3e50; color: white; border: 1px solid #555; padding: 15px 10px; border-radius: 5px; font-size: 13px; cursor: pointer; word-break: keep-all; line-height: 1.4; }
         .btn-policy:hover { background-color: #34495e; }
+
+        /* 💡 주식 테마 선택 상세 내역 창 스타일 */
+        .stock-item-box {
+            background-color: #2c3e50; border: 1px solid #555; border-radius: 6px;
+            padding: 10px 14px; margin-bottom: 8px; cursor: pointer; text-align: left; color: white;
+        }
+        .stock-item-box:hover { background-color: #34495e; border-color: #f1c40f; }
+        .stock-meta-info { font-size: 11px; color: #b2bec3; margin-top: 4px; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -164,12 +152,12 @@
         <div class="logo-subtitle">브레이크 시티 저널</div>
         <button class="btn-large" id="btn-start"><span style="font-size:28px">📑</span> 저널 읽기</button>
     </div>
-    
-        <div id="guide-screen">
+
+    <div id="guide-screen">
         <div class="guide-box">
             <div class="guide-title">게임 룰 안내</div>
             <ul class="guide-list">
-                <li>당신은 개척촌 브레이크 시티의 신임 시장입니다.</li>
+                <li>당신은 개척촌 브레이크 시티의 시장입니다.</li>
                 <li>브레이크 시티는 20살의 남녀 100명으로 이루어진 도시입니다.</li>
                 <li>1달에 1번 정책을 결정합니다.</li>
                 <li>1번의 정책은 1달간 유지됩니다.</li>
@@ -184,7 +172,6 @@
         <button class="btn-large" id="btn-start-game"><span style="font-size:24px">⚙️</span> 시뮬레이션 시작</button>
     </div>
 
-
     <div id="game-screen">
         <div id="top-bar">
             <div>
@@ -192,9 +179,7 @@
                 <span class="stat-value" id="ui-year">0</span>년 
                 <span class="stat-value" id="ui-month">1</span>개월
             </div>
-            
             <button class="btn-retire" id="btn-retire">🚪 퇴임한다</button>
-            
             <div style="text-align: right;">
                 <span class="stat-text">Pop</span> 
                 <span class="stat-value" id="ui-pop">100</span>
@@ -237,17 +222,25 @@
     </div>
 
     <div id="policy-overlay">
-        <div class="policy-title">새로운 정책 수립<br><span style="font-size:14px; color:#ccc;">(1세션간 유지됩니다)</span></div>
+        <div class="policy-title">새로운 정책 수립<br><span style="font-size:14px; color:#ccc;">(1달간 유지됩니다)</span></div>
         <div class="policy-grid">
             <button class="btn-policy" onclick="applyPolicy(1)">1. 엄벌주의<br>(경찰이 폭력범을 폭행)</button>
-            <button class="btn-policy" onclick="applyPolicy(2)">2. 기업규제<br>(랜덤 주식을 규제함)</button>
-            <button class="btn-policy" onclick="applyPolicy(3)">3. 기관투자<br>(랜덤 주식을 진흥함)</button>
+            <button class="btn-policy" onclick="openStockSelect(2)">2. 기업규제<br>(특정 주식을 규제함) 🔍</button>
+            <button class="btn-policy" onclick="openStockSelect(3)">3. 기관투자<br>(특정 주식을 진흥함) 🔍</button>
             <button class="btn-policy" onclick="applyPolicy(4)">4. 이주정책<br>(랜덤 이주민 10명)</button>
             <button class="btn-policy" onclick="applyPolicy(5)">5. 성개방주의<br>(임신조건 완화)</button>
             <button class="btn-policy" onclick="applyPolicy(6)">6. 엄숙주의<br>(시민들이 낮은 빈도로 교류)</button>
             <button class="btn-policy" onclick="applyPolicy(7)">7. 카니발리즘<br>(시민들이 높은 빈도로 교류)</button>
             <button class="btn-policy" onclick="applyPolicy(8)">8. 무정부주의<br>(변화는 필요 없다)</button>
         </div>
+    </div>
+
+    <div id="stock-select-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.95); z-index: 55; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
+        <div id="stock-select-notice" style="font-size: 13px; margin-bottom: 15px; text-align: center; font-weight: bold; word-break: keep-all; line-height: 1.4;"></div>
+        <div class="policy-title" id="stock-select-title" style="font-size: 20px; margin-bottom: 15px;">대상 종목 선택</div>
+        <div id="stock-select-list" style="width: 100%; max-height: 65%; overflow-y: auto; padding-right: 4px;">
+            </div>
+        <button class="btn-policy" onclick="closeStockSelect()" style="margin-top: 15px; background-color: #7f8c8d; width: 100%;">이전으로</button>
     </div>
 </div>
 
@@ -268,12 +261,13 @@ let policyTimer = 0;
 let P_COOLDOWN = 10;
 let P_PREG_REQ = 5;
 let P_STRICT_PUNISH = false;
+let selectedPolicyNum = null; // 규제(2) 혹은 투자(3) 보관용 변수
 
 // ---------------- 월간 통계 데이터 구조 ----------------
 let monthlyStats = {
     attacks: 0, hospitalized: 0, pregnancies: 0, births: 0, miscarriages: 0,
     fleeCount: 0, friendly: 0, deadBots: [], childAbuse: 0, kidnap: 0,
-    theft: 0, cult: 0, corruption: 0, miscarriageAges: [] // 💡 새로 추가된 값들
+    theft: 0, cult: 0, corruption: 0, miscarriageAges: [] 
 };
 
 function resetMonthlyStats() {
@@ -290,6 +284,15 @@ let stocks = {
     science: { name: "과학", safe: 30, drive: 20, jackpot: 0.05, failMod: 0, succMod: 0 },
     culture: { name: "문화", safe: 25, drive: 17, jackpot: 0.10, failMod: 0, succMod: 0 },
     bitcoin: { name: "비트코인", safe: 10, drive: 13, jackpot: 0.20, failMod: 0, succMod: 0 }
+};
+
+// 각 테마별 상수 선호도 고정 텍스트 매핑
+const stockInvestorPrefs = {
+    energy: "남성, 중년층 (26~40세)",
+    material: "여성, 중년층 이상 (41세 이상)",
+    science: "남성, 중년층 (26~40세)",
+    culture: "여성, 청년층 (25세 이하)",
+    bitcoin: "남성, 청년층 (25세 이하)"
 };
 
 const canvas = document.getElementById('gameCanvas');
@@ -426,13 +429,11 @@ function executeTurn() {
 
         let moved = false;
         
-        // 1. 도망 상태
         if(bot.state === 'fleeing' && bot.fleeTargetId) {
             let predator = activeBots.find(b => b.id === bot.fleeTargetId);
             if(predator) { moveAway(bot, predator); moved = true; } 
             else { bot.state = 'idle'; }
         }
-        // 2. 부모의 아이 추적
         else if (bot.children.length > 0) {
             let aliveChildren = bot.children.map(cid => bots.find(b => b.id === cid)).filter(b => b && !b.isHospitalized && b.age < 15);
             if(aliveChildren.length > 0) {
@@ -443,7 +444,6 @@ function executeTurn() {
             }
         }
         
-        // 3. 타겟 탐색 및 접근
         if(!moved) {
             let target = findTargetInVision(bot, activeBots);
             if(target) {
@@ -454,42 +454,38 @@ function executeTurn() {
             }
         }
 
-        // --- 💡 추가된 핵심 로직: 타겟이 없는데 주변에 쿨다운 상대가 있다면 피해서 돌아다님 ---
         if(!moved) {
             let cooldownTarget = null;
             for(let other of activeBots) {
                 if(bot.id === other.id) continue;
                 if(bot.cooldowns[other.id]) {
                     let dist = Math.abs(bot.x - other.x) + Math.abs(bot.y - other.y);
-                    if(dist <= 3) { cooldownTarget = other; break; } // 반경 3칸 이내면 회피
+                    if(dist <= 3) { cooldownTarget = other; break; } 
                 }
             }
             if(cooldownTarget) {
-                moveAway(bot, cooldownTarget); // 적극적으로 반대 방향으로 걷기
+                moveAway(bot, cooldownTarget); 
                 moved = true;
             }
         }
-        // ---------------------------------------------------------------------
 
-        // 4. 그냥 배회하기
         if(!moved) moveRandom(bot);
     });
     draw();
 }
 
 function findTargetInVision(bot, activeBots) {
-    // 💡 멍청함 추가: 주변에 사람이 있어도 30%의 확률로만 관심을 가짐 (70%는 멍 때림)
     if (Math.random() > 0.3) return null; 
 
     let nearest = null; 
-    let minDist = 4; // 💡 시야거리를 5에서 3으로 축소 (minDist는 시야+1 이므로 4)
+    let minDist = 4; 
     
     for(let other of activeBots) {
         if(bot.id === other.id) continue;
         if(bot.cooldowns[other.id]) continue; 
         
         let dist = Math.abs(bot.x - other.x) + Math.abs(bot.y - other.y);
-        if(dist <= 3 && dist < minDist) { // 💡 거리 3 이내만 감지
+        if(dist <= 3 && dist < minDist) { 
             minDist = dist; 
             nearest = other; 
         }
@@ -521,7 +517,7 @@ function resolveInteraction(actor, receiver) {
         actor.happiness = Math.min(100, actor.happiness + 4);
         
         monthlyStats.friendly++;
-        if (receiver.age <= 15) monthlyStats.kidnap++; // 15세 이하 유괴 의심 추가
+        if (receiver.age <= 15) monthlyStats.kidnap++; 
 
         logMsg(`"${actor.code}"${getParticle(actor.code, '이가')} "${receiver.code}"${getParticle(receiver.code, '와과')} "친목질"했습니다.`);
         logMsg(`"${actor.code}"${getParticle(actor.code, '이가')} 행복해합니다.`);
@@ -534,7 +530,7 @@ function resolveInteraction(actor, receiver) {
         receiver.happiness = Math.max(0, receiver.happiness - 3);
         
         monthlyStats.attacks++;
-        if (receiver.age <= 15) monthlyStats.childAbuse++; // 15세 이하 아동 학대 추가
+        if (receiver.age <= 15) monthlyStats.childAbuse++; 
 
         logMsg(`"${actor.code}"${getParticle(actor.code, '이가')} "${receiver.code}"${getParticle(receiver.code, '을를')} "공격"했습니다.`);
         logMsg(`"${receiver.code}"${getParticle(receiver.code, '이가')} 분노합니다.`);
@@ -544,7 +540,7 @@ function resolveInteraction(actor, receiver) {
             let distToParent = Math.abs(parent.x - actor.x) + Math.abs(parent.y - actor.y);
             if(distToParent <= 5) {
                 actor.hp -= 1; 
-                monthlyStats.attacks++; // 복수도 공격 횟수로 집계
+                monthlyStats.attacks++; 
                 logMsg(`"${parent.code}"${getParticle(parent.code, '이가')} 자식을 위해 "${actor.code}"${getParticle(actor.code, '을를')} "복수(공격)"했습니다!`);
             }
         }
@@ -555,7 +551,7 @@ function resolveInteraction(actor, receiver) {
         let actName = "";
         if(rnd === 0) { actor.anger += 3; actName = "종교권유"; }
         else if(rnd === 1) { actor.anger += 1; actName = "구걸"; }
-        else if(rnd === 2) { actor.anger += 10; actName = "절도"; }
+        else if(rnd === 2) { actor.anger += 10; actName = "절도"; monthlyStats.theft++; }
         else if(rnd === 3) { actor.happiness += 7; actName = "후원"; }
         else if(rnd === 4) { actor.happiness += 5; actName = "위로"; }
         else if(rnd === 5) { actor.happiness += 3; actName = "응원"; }
@@ -568,46 +564,33 @@ function resolveInteraction(actor, receiver) {
 
 function getSecretaryComment() {
     let pool = [];
-    
-    // 2. 산모의 분노 
     if (monthlyStats.miscarriages > 0 && monthlyStats.miscarriageAges.length > 0) {
         let rndAge = monthlyStats.miscarriageAges[Math.floor(Math.random() * monthlyStats.miscarriageAges.length)];
         pool.push(`시장님, 폭력사태로 아이를 잃은 ${rndAge}세 여성이 청사 앞에서 1인 시위를 시작했습니다.`);
     }
-
-    // 3. 사회부적응아의 호소문
     if (monthlyStats.friendly >= 1200) {
         pool.push("시장님, 익명을 요청한 한 시민이 요즘 우리 지역은 소음 공해와 환경 문제에 시달리며 짐승의 왕국이나 다름없다고... 아니, 이건 파쇄용 문서잖아?");
     }
-
-    // 4. 아동권리협약
     if (monthlyStats.kidnap >= 10) {
         pool.push("아동보호를 위한 정책을 추진하셔야 할 것 같습니다.");
     }
-
-    // 5. 고담시티
     if (monthlyStats.hospitalized >= 50) {
         pool.push("시장님, 요즘 거리에 나가보시는 하시는 겁니까? 거리에 사람이 없습니다. 텅 비었다구요.");
     }
-
-    // 6. 파이트클럽
     if (monthlyStats.attacks >= 400) {
         pool.push("분노 바이러스라고 아십니까? *퍽*");
     }
 
-    // 💡 1. 비서의 권태 (다른 이슈가 전혀 없을 때만 등장)
     if (pool.length === 0) {
         return "시장님, 이번 달도 무사히 넘기셨군요.";
     }
-
-    // 조건에 맞는 문장이 여러 개라면 그 중 랜덤 1개 반환
     return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function checkFemaleLogic(male, female, isFriendly) {
     if(female.happiness <= 30 || female.anger >= 50) {
         female.state = 'fleeing'; female.fleeTargetId = male.id; female.stateTimer = 15;
-        monthlyStats.fleeCount++; // 성범죄 신고(도망) 누적
+        monthlyStats.fleeCount++; 
         logMsg(`"${female.code}"${getParticle(female.code, '이가')} "${male.code}"${getParticle(male.code, '을를')} 피해 도망칩니다.`);
     } 
     else if (female.age >= 15 && female.age <= 40 && !female.isPregnant) {
@@ -626,7 +609,7 @@ function checkFemaleLogic(male, female, isFriendly) {
                 female.isPregnant = true;
                 female.pregnancyTimer = 9; 
                 female.pregHospitalCount = 0; 
-                monthlyStats.pregnancies++; // 임신 누적
+                monthlyStats.pregnancies++; 
                 logMsg(`"${female.code}"${getParticle(female.code, '이가')} 새로운 생명을 잉태했습니다.`);
             }
         }
@@ -645,7 +628,7 @@ function doBirth(female) {
     female.children.push(child.id);
     bots.push(child);
     
-    monthlyStats.births++; // 출산 누적
+    monthlyStats.births++; 
     logMsg(`"${female.code}"${getParticle(female.code, '이가')} 새로운 봇(${child.code}, 1세)${getParticle(child.code, '을를')} 출산했습니다!`);
 }
 
@@ -656,7 +639,7 @@ function checkHP(bot) {
         bot.isHospitalized = true; bot.hospitalCount++;
         bot.anger += 10; bot.happiness = Math.max(0, bot.happiness - 10);
         
-        monthlyStats.hospitalized++; // 병원 입원 누적
+        monthlyStats.hospitalized++; 
 
         if (bot.isPregnant) {
             bot.pregHospitalCount++;
@@ -664,13 +647,13 @@ function checkHP(bot) {
                 bot.pregnancyTimer = -1; bot.isPregnant = false;
                 bot.anger += 20; bot.happiness -= 30;
                 monthlyStats.miscarriages++;
-                monthlyStats.miscarriageAges.push(bot.age); // 💡 이 줄을 추가! (나이 수집)
+                monthlyStats.miscarriageAges.push(bot.age); 
                 logMsg(`"${bot.code}"에게 안타깝게도 유산이 발생했습니다.`);
             }
         }
 
         if (bot.hospitalCount >= 10) {
-            monthlyStats.deadBots.push(bot.code); // 사망자 명단 추가
+            monthlyStats.deadBots.push(bot.code); 
             logMsg(`"${bot.code}"${getParticle(bot.code, '이가')} 누적 병원 10회로 사망했습니다.`);
         }
     }
@@ -689,14 +672,9 @@ function tryMove(bot, dx, dy) {
 function moveTowards(bot, tx, ty) {
     let dx = Math.sign(tx - bot.x); 
     let dy = Math.sign(ty - bot.y);
-    
-    // 일단 목표 방향으로 정직하게 이동 시도
     let success = tryMove(bot, dx, dy);
-    
-    // 💡 의도된 멍청함: 가려던 길이 막히면 잔머리(Sliding) 안 굴리고
-    // "아 씨, 막혔네" 하면서 그냥 엉뚱한 랜덤 방향으로 튕겨서 걸어 가버림.
     if (!success) {
-        bot.wanderTimer = 0; // 랜덤 방향 리셋 유도
+        bot.wanderTimer = 0; 
         moveRandom(bot); 
     }
 }
@@ -705,10 +683,7 @@ function moveAway(bot, predator) {
     let dx = Math.sign(bot.x - predator.x); 
     let dy = Math.sign(bot.y - predator.y);
     if(dx === 0 && dy === 0) { dx = 1; dy = 1; } 
-    
     let success = tryMove(bot, dx, dy);
-    
-    // 도망치다 막혀도 멍청하게 다른 랜덤 방향으로 튐
     if (!success) {
         bot.wanderTimer = 0;
         moveRandom(bot);
@@ -716,24 +691,17 @@ function moveAway(bot, predator) {
 }
 
 function moveRandom(bot) {
-    // 봇 객체에 임시 방향 타이머가 없다면 세팅
     if (bot.wanderTimer === undefined || bot.wanderTimer <= 0) {
         bot.wanderDx = Math.floor(Math.random()*3)-1; 
         bot.wanderDy = Math.floor(Math.random()*3)-1;
-        bot.wanderTimer = Math.floor(Math.random()*5) + 3; // 3~7턴 동안 같은 방향 유지
+        bot.wanderTimer = Math.floor(Math.random()*5) + 3; 
     }
-    
-    // 제자리에 멈춰있기로 한 경우
     if (bot.wanderDx === 0 && bot.wanderDy === 0) {
         bot.wanderTimer = 0; 
         return;
     }
-
-    // 정해진 방향으로 걷기 시도
     let success = tryMove(bot, bot.wanderDx, bot.wanderDy);
-    
     if (!success) {
-        // 벽이나 봇에 막혔다면 바로 타이머를 0으로 만들어 다음 턴에 새 방향을 찾게 함
         bot.wanderTimer = 0; 
     } else {
         bot.wanderTimer--;
@@ -782,11 +750,10 @@ function endSession() {
     document.getElementById('r-birth').innerText = `${monthlyStats.births}명`;
     document.getElementById('r-misc').innerText = `${monthlyStats.miscarriages}명`;
     document.getElementById('r-death').innerText = `${monthlyStats.deadBots.length}명`;
-    // 💡 추가된 UI 업데이트
     document.getElementById('r-theft').innerText = `${monthlyStats.theft}건`;
     document.getElementById('r-cult').innerText = `${monthlyStats.cult}건`;
     document.getElementById('r-corruption').innerText = `${monthlyStats.corruption}건`;
-    document.getElementById('r-secretary').innerText = getSecretaryComment(); // 비서관 랜덤 대사 삽입
+    document.getElementById('r-secretary').innerText = getSecretaryComment(); 
     
     if (monthlyStats.deadBots.length > 0) {
         document.getElementById('r-death-names').innerText = `명단: ${monthlyStats.deadBots.join(', ')}`;
@@ -794,9 +761,15 @@ function endSession() {
         document.getElementById('r-death-names').innerText = "";
     }
 
-    // 보고서 창 띄우기 (보고서를 닫을 때 정책창을 체크함)
     document.getElementById('report-overlay').style.display = 'flex';
 }
+
+// ---------------- 보고서 닫기 버튼 이벤트 ----------------
+document.getElementById('btn-close-report').addEventListener('click', () => {
+    document.getElementById('report-overlay').style.display = 'none';
+    resetMonthlyStats(); 
+    document.getElementById('policy-overlay').style.display = 'flex';
+});
 
 function processStocks() {
     for(let k in stocks) { stocks[k].failMod = 0; stocks[k].succMod = 0; }
@@ -819,31 +792,97 @@ function processStocks() {
     }
 }
 
-function applyPolicy(num) {
+// 💡 [수정] 주식 타겟 직접 선택 창 열기 함수
+function openStockSelect(num) {
+    selectedPolicyNum = num; // 2(규제) 또는 3(투자) 보관
+    
+    const notice = document.getElementById('stock-select-notice');
+    const title = document.getElementById('stock-select-title');
+    const listContainer = document.getElementById('stock-select-list');
+    
+    // 오버레이 상단 안내 텍스트 세팅
+    if (num === 2) {
+        title.innerText = "기업 규제 대상 선택";
+        notice.innerText = "— 선택한 종목에 투자한 시민들이 실망할 수 있습니다.";
+        notice.style.color = "#ff4d4d";
+    } else {
+        title.innerText = "기관 투자 대상 선택";
+        notice.innerText = "— 선택한 종목에 투자한 시민들이 기뻐할 것입니다.";
+        notice.style.color = "#00ff00";
+    }
+    
+    // 주식 동적 리스트 출력 생성
+    listContainer.innerHTML = "";
+    for (let key in stocks) {
+        let st = stocks[key];
+        let jackpotPercent = (st.jackpot * 100).toFixed(0);
+        let prefInfo = stockInvestorPrefs[key];
+        
+        let item = document.createElement('div');
+        item.className = 'stock-item-box';
+        item.innerHTML = `
+            <div style="display:flex; justify-content:space-between; font-weight:900;">
+                <span>📈 ${st.name}</span>
+                <span style="color:#f1c40f;">선택하기</span>
+            </div>
+            <div class="stock-meta-info">
+                현재 수치 ➔ 안전: ${st.safe} | 동력: ${st.drive} | 대박 확률: ${jackpotPercent}%<br>
+                상수 선호 투자자 ➔ [ ${prefInfo} ]
+            </div>
+        `;
+        // 항목 클릭 시 해당 주식 기반으로 정책 반영
+        item.onclick = () => {
+            applyPolicy(selectedPolicyNum, key);
+        };
+        listContainer.appendChild(item);
+    }
+    
+    document.getElementById('stock-select-overlay').style.display = 'flex';
+}
+
+function closeStockSelect() {
+    document.getElementById('stock-select-overlay').style.display = 'none';
+}
+
+// 💡 [수정] 정책 반영 함수 파라미터 확장 (stockKey 변수 추가)
+function applyPolicy(num, stockKey = null) {
     activePolicy = num; policyTimer = 1; 
     P_PREG_REQ = 5; P_COOLDOWN = 10; P_STRICT_PUNISH = false;
 
-    let keys = Object.keys(stocks);
-    let rKey = keys[Math.floor(Math.random() * keys.length)];
-
     switch(num) {
-        case 1: P_STRICT_PUNISH = true; break;
-        case 2: stocks[rKey].safe = Math.max(0, stocks[rKey].safe - 10); break;
-        case 3: stocks[rKey].drive += 14; break;
+        case 1: 
+            P_STRICT_PUNISH = true; 
+            logMsg(`새로운 정책 [1번 엄벌주의]가 수립되었습니다.`);
+            break;
+        case 2: 
+            if(stockKey) {
+                stocks[stockKey].safe = Math.max(0, stocks[stockKey].safe - 10); 
+                logMsg(`새로운 정책 [2번 기업규제: ${stocks[stockKey].name}]가 수립되었습니다.`);
+            }
+            break;
+        case 3: 
+            if(stockKey) {
+                stocks[stockKey].drive += 14; 
+                logMsg(`새로운 정책 [3번 기관투자: ${stocks[stockKey].name}]가 수립되었습니다.`);
+            }
+            break;
         case 4: 
             for(let i=0; i<10; i++) {
                 let pos = getEmptyPos(); let g = Math.random() > 0.5 ? 'M' : 'F'; let a = Math.floor(Math.random() * 40) + 10;
                 let newBot = new Bot(a, g, pos.x, pos.y);
                 bots.push(newBot);
                 logMsg(`[이주정책] 새로운 봇 "${newBot.code}"${getParticle(newBot.code, '이가')} 도시에 합류했습니다.`);
-            } break;
-        case 5: P_PREG_REQ = 3; break;
-        case 6: P_COOLDOWN = 15; break;
-        case 7: P_COOLDOWN = 5; break;
-        case 8: break;
+            } 
+            logMsg(`새로운 정책 [4번 이주정책]이 수립되었습니다.`);
+            break;
+        case 5: P_PREG_REQ = 3; logMsg(`새로운 정책 [5번 성개방주의]가 수립되었습니다.`); break;
+        case 6: P_COOLDOWN = 15; logMsg(`새로운 정책 [6번 엄숙주의]가 수립되었습니다.`); break;
+        case 7: P_COOLDOWN = 5; logMsg(`새로운 정책 [7번 카니발리즘]가 수립되었습니다.`); break;
+        case 8: logMsg(`새로운 정책 [8번 무정부주의]가 수립되었습니다.`); break;
     }
-    logMsg(`새로운 정책 [${num}번]이 수립되었습니다.`);
+    
     document.getElementById('policy-overlay').style.display = 'none';
+    document.getElementById('stock-select-overlay').style.display = 'none';
     updateUI(); draw();
 }
 
@@ -868,43 +907,29 @@ function updateUI() {
     document.getElementById('ui-pop').innerText = bots.length;
 }
 
-// 💡 기존 btn-start 덮어쓰기 (인트로 -> 가이드 화면으로 이동)
 document.getElementById('btn-start').addEventListener('click', () => {
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('guide-screen').style.display = 'flex';
 });
 
-// 💡 새로 추가 (가이드 화면 -> 게임 화면 시작)
 document.getElementById('btn-start-game').addEventListener('click', () => {
     document.getElementById('guide-screen').style.display = 'none';
     document.getElementById('game-screen').style.display = 'flex';
     initGame(); 
-    document.getElementById('policy-overlay').style.display = 'flex'; // 첫 달 정책 수립
+    document.getElementById('policy-overlay').style.display = 'flex'; 
 });
 
-// 💡 기존 보고서 닫기 버튼 덮어쓰기 (매달 닫을 때마다 정책창 띄우기)
-document.getElementById('btn-close-report').addEventListener('click', () => {
-    document.getElementById('report-overlay').style.display = 'none';
-    resetMonthlyStats(); 
-    
-    // 12개월 조건(if 문) 삭제 -> 이제 매달 닫을 때마다 무조건 정책 오버레이 띄움
-    document.getElementById('policy-overlay').style.display = 'flex';
-});
-
-    // 💡 퇴임 버튼 클릭 이벤트 리스너 추가
 document.getElementById('btn-retire').addEventListener('click', () => {
     if (!confirm("정말로 시장 직에서 퇴임하고 저널을 덮으시겠습니까?\n(모든 시뮬레이션 데이터가 초기화됩니다.)")) {
         return;
     }
 
-    // 1. 진행 중인 타이머 강제 종료 및 상태 리셋
     clearInterval(sessionInterval);
     isSessionRunning = false;
     totalSessions = 0;
     currentTurn = 0;
     botIdCounter = 1;
 
-    // 2. 글로벌 시스템 데이터 초기화 (주식 기본값 복구)
     stocks = {
         energy:  { name: "에너지", safe: 50, drive: 10, jackpot: 0.01, failMod: 0, succMod: 0 },
         material:{ name: "재료", safe: 70, drive: 25, jackpot: 0.05, failMod: 0, succMod: 0 },
@@ -913,28 +938,23 @@ document.getElementById('btn-retire').addEventListener('click', () => {
         bitcoin: { name: "비트코인", safe: 10, drive: 13, jackpot: 0.20, failMod: 0, succMod: 0 }
     };
     
-    // 정책 리셋
     activePolicy = 8;
     policyTimer = 0;
     P_COOLDOWN = 10;
     P_PREG_REQ = 5;
     P_STRICT_PUNISH = false;
 
-    // 3. 통계 오버레이 및 데이터 초기화
     resetMonthlyStats();
     document.getElementById('report-overlay').style.display = 'none';
     document.getElementById('policy-overlay').style.display = 'none';
+    document.getElementById('stock-select-overlay').style.display = 'none';
 
-    // 4. 하단 진행 버튼 텍스트 원복
     let btnNext = document.getElementById('btn-next-session');
     btnNext.disabled = false;
     btnNext.innerHTML = `<span style="font-size:28px">📑</span> 1세션 진행 (1달)`;
 
-    // 5. 화면 전환 (게임 화면 숨기고 시작 화면 표시)
     document.getElementById('game-screen').style.display = 'none';
     document.getElementById('start-screen').style.display = 'flex';
-    
-    // 6. 로그창 초기화
     document.getElementById('log-area').innerHTML = "";
 });
     
@@ -943,7 +963,6 @@ document.getElementById('btn-next-session').addEventListener('click', () => {
     isSessionRunning = true; currentTurn = 0;
     let btn = document.getElementById('btn-next-session'); btn.disabled = true;
     
-    // 300턴 (30초) 진행으로 수정 적용됨
     sessionInterval = setInterval(() => {
         executeTurn(); currentTurn++;
         if(currentTurn % 10 === 0) btn.innerHTML = `진행 중... ${Math.floor((currentTurn/300)*100)}%`;
