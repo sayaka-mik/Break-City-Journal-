@@ -1353,14 +1353,45 @@ document.getElementById('btn-next-session').addEventListener('click', () => {
     }, 50); 
 });
 
-// 💡 --- 여기서부터 서사시(자동 통치) 전용 함수들 ---
 function mutateTriggers() {
+    // 1. 1~8번 정책 중 무작위로 1개 선택
+    let targetPolicy = Math.floor(Math.random() * 8) + 1;
+    let prefix = `p${targetPolicy}_`; // 예: 'p4_' (이주정책)
+    
+    // 2. 로그 출력을 위한 예쁜 한국어 이름 매핑
+    let keyNames = {
+        attackPct: "폭력한계점", session: "발동주기", genderPct: "성비편향치",
+        popMax: "인구하한선", popDropPct: "인구급감치", birthPct: "출산저조치",
+        deadStep: "사망자갱신치", friendPct: "교류저조치"
+    };
+    
+    let changes = [];
+    
+    // 3. 선택된 정책(prefix)과 이름이 일치하는 모든 트리거 변동
     for (let k in currentTriggers) {
-        let change = Math.floor(Math.random() * 5) - 2; // -2 ~ +2 변동
-        currentTriggers[k] = Math.max(1, currentTriggers[k] + change); // 최소치 1 보장
+        if (k.startsWith(prefix)) {
+            // -6 ~ +6 랜덤 변동
+            let change = Math.floor(Math.random() * 13) - 6; 
+            
+            // 💡 음수/0 방어 (최소 1 보장)
+            currentTriggers[k] = Math.max(1, currentTriggers[k] + change);
+            
+            // 로그용 텍스트 조립
+            let subKey = k.replace(prefix, ''); // 'p4_popMax' -> 'popMax'
+            let kName = keyNames[subKey] || subKey;
+            let unit = k.includes('Pct') ? '%' : (k.includes('session') ? '개월' : '명');
+            let changeText = change > 0 ? `+${change}` : change;
+            
+            changes.push(`${kName} ${changeText} ➔ ${currentTriggers[k]}${unit}`);
+        }
     }
-    regimeLogs.push(`================================<br>🏛️ [${Math.floor(totalSessions/12)}년 ${(totalSessions%12)+1}월] 제${currentRuler}대 시장 취임!<br> (엄벌기준: ${currentTriggers.p1_attackPct}%, 성개방기준: ${currentTriggers.p5_birthPct}%, 사형집행간격: ${currentTriggers.p6_deadStep}명 등 성향 변경)`);
+    
+    let pNames = ["", "엄벌주의", "기업규제", "기관투자", "이주정책", "성개방주의", "엄숙주의", "카니발리즘", "무정부주의"];
+    
+    // 4. 정권 교체 로그에 기록
+    regimeLogs.push(`================================<br>🏛️ [${Math.floor(totalSessions/12)}년 ${(totalSessions%12)+1}월] 제${currentRuler}대 시장 취임!<br> 🔸 <b>[${pNames[targetPolicy]}] 집중 개정:</b> ${changes.join(' / ')}`);
 }
+
 
 function doAutoPolicy() {
     let pool = []; let forceP4 = false;
