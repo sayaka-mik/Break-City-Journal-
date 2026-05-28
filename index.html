@@ -1442,7 +1442,7 @@ function doAutoPolicy() {
 
 function autoPlayNextMonth() {
     if (!isAutoMode) return;
-    if (totalSessions >= 600) { showEpicEnding(); return; } // 최대 50년(600개월) 종료
+    if (totalSessions >= 1212) { showEpicEnding(); return; } // 최대 50년(600개월) 종료
     
     if (totalSessions > 0 && totalSessions % 60 === 0) { 
         currentRuler++; rulerStats.push({ruler: currentRuler, attacks: 0, births: 0}); mutateTriggers(); 
