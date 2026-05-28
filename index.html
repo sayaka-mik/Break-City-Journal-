@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Break City Journal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+
+        body {
+            margin: 0; padding: 0; background-color: #050505; color: #eeeeee;
+            font-family: 'Noto Sans KR', sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden;
+        }
+
+        #device-container {
+            width: 100%; max-width: 450px; aspect-ratio: 9/14;
+            background-color: #111111; position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        /* 시작 화면 */
+        #start-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100;
+        }
+
+        .logo-title { font-size: 36px; font-weight: 900; color: #ffffff; text-shadow: 0 0 10px rgba(255,255,255,0.5); margin-bottom: 10px; letter-spacing: -1px; }
+        .logo-subtitle { font-size: 14px; color: #aaaaaa; margin-bottom: 60px; letter-spacing: 2px; }
+        .btn-large { background-color: #2a2a35; color: white; border: 2px solid #444; padding: 15px 30px; font-size: 20px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+        .btn-large:hover { background-color: #444; border-color: #777; }
+
+        /* 메인 화면 UI */
+        #game-screen { display: none; flex-direction: column; height: 100%; width: 100%; }
+        #top-bar { height: 60px; background-color: #1a1a24; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; font-size: 18px; font-weight: 700; border-bottom: 1px solid #333; }
+        .stat-text { color: #888; font-size: 14px; }
+        .stat-value { color: #fff; }
+        #map-container { flex: 1; display: flex; justify-content: center; align-items: center; padding: 10px; background-color: #0a0a0f; }
+        canvas { background-color: #151515; border: 1px solid #333; max-width: 100%; max-height: 100%; aspect-ratio: 1 / 1; object-fit: contain; }
+        #bottom-bar { height: 80px; background-color: #1a1a24; display: flex; justify-content: center; align-items: center; border-top: 1px solid #333; padding: 10px; }
+        .btn-journal { width: 100%; height: 100%; background-color: #2980b9; color: white; border: none; font-size: 22px; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-journal:disabled { background-color: #34495e; color: #7f8c8d; cursor: not-allowed; }
+
+        /* 로그 창 */
+        #log-area { height: 120px; background: #111; color: #0f0; font-family: monospace; font-size: 11px; padding: 5px; overflow-y: auto; border-top: 1px solid #333; line-height: 1.3; }
+        .log-line { margin-bottom: 2px; }
+
+        /* ---------------- 보고서 오버레이 ---------------- */
+        #report-overlay {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85); /* 화면 전체는 어둡게 덮음 */
+            z-index: 60; 
+            flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+        }
+        .report-box {
+            background-color: #3e422b; /* 짙은 카키색 (밀리터리/서류 느낌) */
+            color: #ffffff; /* 기본 글자색 흰색 */
+            width: 100%; max-width: 380px; padding: 20px; border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 2px solid #232618;
+        }
+        .report-title {
+            font-size: 22px; font-weight: 900; margin-bottom: 15px; border-bottom: 2px solid #6b734c; padding-bottom: 10px; text-align: center;
+        }
+        .report-list {
+            list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 14px; line-height: 1.8; font-weight: 700;
+        }
+        .report-list li { border-bottom: 1px dashed #6b734c; display: flex; justify-content: space-between; }
+        
+        .report-val { 
+            color: #ff4d4d; /* 수치는 밝고 강렬한 빨간색 */
+            font-weight: 900; 
+        }
+        
+        .report-death-list { font-size: 11px; color: #cccccc; word-break: break-all; margin-top: -5px; margin-bottom: 5px; font-weight: 400; display: block; }
+        .btn-close-report {
+            width: 100%; background-color: #232618; color: white; border: 1px solid #6b734c; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 5px; cursor: pointer; transition: background-color 0.2s;
+        }
+        .btn-close-report:hover { background-color: #15170e; }
+
+
+        /* ---------------- 정책 오버레이 ---------------- */
+        #policy-overlay {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.9); z-index: 50;
+            flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+        }
+        .policy-title { font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #f1c40f; text-align: center; }
+        .policy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+        .btn-policy { background-color: #2c3e50; color: white; border: 1px solid #555; padding: 15px 10px; border-radius: 5px; font-size: 13px; cursor: pointer; word-break: keep-all; line-height: 1.4; }
+        .btn-policy:hover { background-color: #34495e; }
+    </style>
+</head>
+<body>
+
+<div id="device-container">
+    <div id="start-screen">
+        <div class="logo-title">브레이크 시티 저널</div>
+        <div class="logo-subtitle">Break City Journal</div>
+        <button class="btn-large" id="btn-start"><span style="font-size:28px">📑</span> 저널 읽기</button>
+    </div>
+
+    <div id="game-screen">
+        <div id="top-bar">
+            <div><span class="stat-text">Date</span> <span class="stat-value" id="ui-year">0</span>년 <span class="stat-value" id="ui-month">1</span>개월</div>
+            <div><span class="stat-text">Pop</span> <span class="stat-value" id="ui-pop">100</span></div>
+        </div>
+        <div id="map-container"><canvas id="gameCanvas" width="500" height="500"></canvas></div>
+        <div id="log-area"></div>
+        <div id="bottom-bar">
+            <button class="btn-journal" id="btn-next-session"><span style="font-size:28px">📑</span> 1세션 진행 (1달)</button>
+        </div>
+    </div>
+
+    <div id="report-overlay">
+        <div class="report-box">
+            <div class="report-title">이번 달 보고서 (<span id="r-month"></span>월)</div>
+            <ul class="report-list">
+                <li><span>폭력사태 발생:</span> <span class="report-val" id="r-attacks">0건</span></li>
+                <li><span>건강한 교류(친목):</span> <span class="report-val" id="r-friendly">0건</span></li>
+                <li><span>아동 학대 (15세 이하 피격):</span> <span class="report-val" id="r-abuse">0건</span></li>
+                <li><span>유괴 의심 (15세 이하 접근):</span> <span class="report-val" id="r-kidnap">0건</span></li>
+                <li><span>성범죄 신고 여성 (도주):</span> <span class="report-val" id="r-flee">0명</span></li>
+                <li><span>병원 이송 인원:</span> <span class="report-val" id="r-hospital">0명</span></li>
+                <li><span>신규 임신:</span> <span class="report-val" id="r-preg">0명</span></li>
+                <li><span>신규 출산:</span> <span class="report-val" id="r-birth">0명</span></li>
+                <li><span>유산:</span> <span class="report-val" id="r-misc">0명</span></li>
+                <li><span>사망자:</span> <span class="report-val" id="r-death">0명</span></li>
+            </ul>
+            <span class="report-death-list" id="r-death-names"></span>
+            <button class="btn-close-report" id="btn-close-report">보고서 닫기</button>
+        </div>
+    </div>
+
+    <div id="policy-overlay">
+        <div class="policy-title">새로운 정책 수립<br><span style="font-size:14px; color:#ccc;">(12세션간 유지됩니다)</span></div>
+        <div class="policy-grid">
+            <button class="btn-policy" onclick="applyPolicy(1)">1. 엄벌주의<br>(공격 2회시 HP 0)</button>
+            <button class="btn-policy" onclick="applyPolicy(2)">2. 기업규제<br>(랜덤 테마 안전 -10)</button>
+            <button class="btn-policy" onclick="applyPolicy(3)">3. 기관투자<br>(랜덤 테마 동력 +14)</button>
+            <button class="btn-policy" onclick="applyPolicy(4)">4. 이주정책<br>(봇 10기 랜덤 추가)</button>
+            <button class="btn-policy" onclick="applyPolicy(5)">5. 성개방주의<br>(임신조건 3회로 완화)</button>
+            <button class="btn-policy" onclick="applyPolicy(6)">6. 엄숙주의<br>(교류금지 15턴으로 증가)</button>
+            <button class="btn-policy" onclick="applyPolicy(7)">7. 카니발리즘<br>(교류금지 5턴으로 감소)</button>
+            <button class="btn-policy" onclick="applyPolicy(8)">8. 현상유지<br>(아무 효과 없음)</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const GRID_SIZE = 50;
+const TILE_SIZE = 10;
+let mapGrid = [];
+let bots = [];
+let botIdCounter = 1;
+
+let totalSessions = 0;
+let currentTurn = 0; 
+let sessionInterval = null;
+let isSessionRunning = false;
+
+let activePolicy = 8;
+let policyTimer = 0;  
+let P_COOLDOWN = 10;
+let P_PREG_REQ = 5;
+let P_STRICT_PUNISH = false;
+
+// ---------------- 월간 통계 데이터 구조 ----------------
+let monthlyStats = {
+    attacks: 0,
+    hospitalized: 0,
+    pregnancies: 0,
+    births: 0,
+    miscarriages: 0,
+    fleeCount: 0,
+    friendly: 0,
+    deadBots: [],
+    childAbuse: 0,
+    kidnap: 0
+};
+
+function resetMonthlyStats() {
+    monthlyStats = { attacks: 0, hospitalized: 0, pregnancies: 0, births: 0, miscarriages: 0, fleeCount: 0, friendly: 0, deadBots: [], childAbuse: 0, kidnap: 0 };
+}
+
+let stocks = {
+    energy:  { name: "에너지", safe: 50, drive: 10, jackpot: 0.01, failMod: 0, succMod: 0 },
+    material:{ name: "재료", safe: 70, drive: 25, jackpot: 0.05, failMod: 0, succMod: 0 },
+    science: { name: "과학", safe: 30, drive: 20, jackpot: 0.05, failMod: 0, succMod: 0 },
+    culture: { name: "문화", safe: 25, drive: 17, jackpot: 0.10, failMod: 0, succMod: 0 },
+    bitcoin: { name: "비트코인", safe: 10, drive: 13, jackpot: 0.20, failMod: 0, succMod: 0 }
+};
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const logArea = document.getElementById('log-area');
+
+function getParticle(codeName, type) {
+    let lastChar = codeName.charAt(codeName.length - 1);
+    let hasJongseong = ['0','1','3','6','7','8'].includes(lastChar);
+    if (type === '이가') return hasJongseong ? '이' : '가';
+    if (type === '을를') return hasJongseong ? '을' : '를';
+    if (type === '와과') return hasJongseong ? '과' : '와';
+    return '';
+}
+
+function initMap() {
+    mapGrid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+    let obstacleCount = 50; 
+    for(let i=0; i<obstacleCount; i++) {
+        let size = Math.floor(Math.random() * 6) + 1;
+        let x = Math.floor(Math.random() * GRID_SIZE);
+        let y = Math.floor(Math.random() * GRID_SIZE);
+        for(let s=0; s<size; s++) {
+            if(x>=0 && x<GRID_SIZE && y>=0 && y<GRID_SIZE) mapGrid[x][y] = 1;
+            if(Math.random() > 0.5) x += (Math.random() > 0.5 ? 1 : -1);
+            else y += (Math.random() > 0.5 ? 1 : -1);
+        }
+    }
+}
+
+function getEmptyPos() {
+    let x, y; let limit = 1000;
+    do {
+        x = Math.floor(Math.random() * GRID_SIZE);
+        y = Math.floor(Math.random() * GRID_SIZE);
+        limit--;
+    } while((mapGrid[x][y] !== 0 || getBotAt(x, y)) && limit > 0);
+    return {x, y};
+}
+
+class Bot {
+    constructor(age, gender, x, y) {
+        this.id = botIdCounter++;
+        this.code = `${gender}-${String(this.id).padStart(4, '0')}`;
+        this.x = x; this.y = y;
+        this.age = age; this.gender = gender;
+        this.maxHp = (this.age >= 50) ? 2 : 3;
+        this.hp = this.maxHp;
+        this.hospitalCount = 0;
+        this.isHospitalized = false;
+        
+        this.happiness = 50; this.anger = 0;
+        this.state = 'idle'; this.stateTimer = 0;
+        this.targetId = null; this.fleeTargetId = null;
+        this.cooldowns = {}; 
+        
+        this.isPregnant = false;
+        this.pregnancyTimer = 0; 
+        this.pregHospitalCount = 0; 
+        this.maleInteractTracker = {}; 
+        this.children = [];
+        this.parentId = null; 
+        
+        this.attacksThisSession = 0;
+        this.investTimer = 0; 
+        this.currentStock = null;
+        this.stockWeights = { energy: 0, material: 0, science: 0, culture: 0, bitcoin: 0 };
+        this.pickStock();
+    }
+
+    pickStock() {
+        for(let key in this.stockWeights) this.stockWeights[key] = 0;
+        if (this.gender === 'M') { this.stockWeights.energy += 5; this.stockWeights.science += 5; this.stockWeights.bitcoin += 5; } 
+        else { this.stockWeights.material += 5; this.stockWeights.culture += 5; }
+
+        if (this.age <= 25) { this.stockWeights.culture += 10; this.stockWeights.bitcoin += 10; }
+        else if (this.age <= 40) { this.stockWeights.energy += 10; this.stockWeights.science += 10; }
+        else { this.stockWeights.material += 10; }
+
+        for(let key in stocks) {
+            this.stockWeights[key] += stocks[key].succMod;
+            this.stockWeights[key] += stocks[key].failMod;
+        }
+
+        let bestScore = -999; let bestStock = 'energy';
+        for(let key in this.stockWeights) {
+            if(this.stockWeights[key] > bestScore) { bestScore = this.stockWeights[key]; bestStock = key; }
+        }
+        this.currentStock = bestStock;
+    }
+
+    getColor() {
+        if (this.age < 20) return '#00ff00';
+        if (this.age >= 40) return this.gender === 'M' ? '#00008b' : '#8b0000';
+        return this.gender === 'M' ? '#0000ff' : '#ff0000';
+    }
+}
+
+function getBotAt(x, y) { return bots.find(b => b.x === x && b.y === y && !b.isHospitalized); }
+
+function initGame() {
+    initMap(); bots = [];
+    for(let i=0; i<50; i++) { let pos = getEmptyPos(); bots.push(new Bot(20, 'M', pos.x, pos.y)); }
+    for(let i=0; i<50; i++) { let pos = getEmptyPos(); bots.push(new Bot(20, 'F', pos.x, pos.y)); }
+    draw(); updateUI();
+}
+
+function logMsg(msg) {
+    let div = document.createElement('div');
+    div.className = 'log-line';
+    div.innerHTML = `[${totalSessions}년 ${(totalSessions%12)+1}월] ${msg}`;
+    logArea.appendChild(div);
+    if (logArea.children.length > 100) { logArea.removeChild(logArea.firstChild); }
+    logArea.scrollTop = logArea.scrollHeight;
+}
+
+function executeTurn() {
+    bots.forEach(b => {
+        if(b.stateTimer > 0) b.stateTimer--;
+        if(b.stateTimer === 0 && b.state !== 'idle') {
+            if(b.state === 'birthing') doBirth(b);
+            b.state = 'idle';
+        }
+        for(let id in b.cooldowns) {
+            b.cooldowns[id]--;
+            if(b.cooldowns[id] <= 0) delete b.cooldowns[id];
+        }
+    });
+
+    let activeBots = bots.filter(b => !b.isHospitalized);
+
+    activeBots.forEach(bot => {
+        if(bot.state === 'interacting' || bot.state === 'birthing') return; 
+
+        let moved = false;
+        
+        // 1. 도망 상태
+        if(bot.state === 'fleeing' && bot.fleeTargetId) {
+            let predator = activeBots.find(b => b.id === bot.fleeTargetId);
+            if(predator) { moveAway(bot, predator); moved = true; } 
+            else { bot.state = 'idle'; }
+        }
+        // 2. 부모의 아이 추적
+        else if (bot.children.length > 0) {
+            let aliveChildren = bot.children.map(cid => bots.find(b => b.id === cid)).filter(b => b && !b.isHospitalized && b.age < 15);
+            if(aliveChildren.length > 0) {
+                aliveChildren.sort((a,b) => a.age - b.age);
+                let youngest = aliveChildren[0];
+                let dist = Math.abs(bot.x - youngest.x) + Math.abs(bot.y - youngest.y);
+                if(dist > 5) { moveTowards(bot, youngest.x, youngest.y); moved = true; }
+            }
+        }
+        
+        // 3. 타겟 탐색 및 접근
+        if(!moved) {
+            let target = findTargetInVision(bot, activeBots);
+            if(target) {
+                let dist = Math.abs(bot.x - target.x) + Math.abs(bot.y - target.y);
+                if(dist <= 1) { initiateInteraction(bot, target); } 
+                else { moveTowards(bot, target.x, target.y); }
+                moved = true;
+            }
+        }
+
+        // --- 💡 추가된 핵심 로직: 타겟이 없는데 주변에 쿨다운 상대가 있다면 피해서 돌아다님 ---
+        if(!moved) {
+            let cooldownTarget = null;
+            for(let other of activeBots) {
+                if(bot.id === other.id) continue;
+                if(bot.cooldowns[other.id]) {
+                    let dist = Math.abs(bot.x - other.x) + Math.abs(bot.y - other.y);
+                    if(dist <= 3) { cooldownTarget = other; break; } // 반경 3칸 이내면 회피
+                }
+            }
+            if(cooldownTarget) {
+                moveAway(bot, cooldownTarget); // 적극적으로 반대 방향으로 걷기
+                moved = true;
+            }
+        }
+        // ---------------------------------------------------------------------
+
+        // 4. 그냥 배회하기
+        if(!moved) moveRandom(bot);
+    });
+    draw();
+}
+
+function findTargetInVision(bot, activeBots) {
+    // 💡 멍청함 추가: 주변에 사람이 있어도 30%의 확률로만 관심을 가짐 (70%는 멍 때림)
+    if (Math.random() > 0.3) return null; 
+
+    let nearest = null; 
+    let minDist = 4; // 💡 시야거리를 5에서 3으로 축소 (minDist는 시야+1 이므로 4)
+    
+    for(let other of activeBots) {
+        if(bot.id === other.id) continue;
+        if(bot.cooldowns[other.id]) continue; 
+        
+        let dist = Math.abs(bot.x - other.x) + Math.abs(bot.y - other.y);
+        if(dist <= 3 && dist < minDist) { // 💡 거리 3 이내만 감지
+            minDist = dist; 
+            nearest = other; 
+        }
+    }
+    return nearest;
+}
+
+function initiateInteraction(bot, target) {
+    bot.state = 'interacting'; bot.stateTimer = 2; 
+    target.state = 'interacting'; target.stateTimer = 2;
+
+    bot.cooldowns[target.id] = P_COOLDOWN;
+    target.cooldowns[bot.id] = P_COOLDOWN;
+
+    let resBot = resolveInteraction(bot, target);
+    let resTarget = resolveInteraction(target, bot); 
+
+    if (bot.gender === 'M' && target.gender === 'F') checkFemaleLogic(bot, target, resBot === 'friend' || resTarget === 'friend');
+    if (target.gender === 'M' && bot.gender === 'F') checkFemaleLogic(target, bot, resBot === 'friend' || resTarget === 'friend');
+}
+
+function resolveInteraction(actor, receiver) {
+    let friendProb = Math.max(0, actor.happiness / 2);
+    let attackProb = Math.max(0, actor.anger / 3 * 2); 
+    let roll = Math.random() * 100;
+
+    if (roll < friendProb) {
+        actor.anger = Math.max(0, actor.anger - 3);
+        actor.happiness = Math.min(100, actor.happiness + 4);
+        
+        monthlyStats.friendly++;
+        if (receiver.age <= 15) monthlyStats.kidnap++; // 15세 이하 유괴 의심 추가
+
+        logMsg(`"${actor.code}"${getParticle(actor.code, '이가')} "${receiver.code}"${getParticle(receiver.code, '와과')} "친목질"했습니다.`);
+        logMsg(`"${actor.code}"${getParticle(actor.code, '이가')} 행복해합니다.`);
+        
+        return 'friend';
+    } else if (roll < friendProb + attackProb) {
+        receiver.hp -= 1;
+        actor.attacksThisSession++;
+        receiver.anger += 5;
+        receiver.happiness = Math.max(0, receiver.happiness - 3);
+        
+        monthlyStats.attacks++;
+        if (receiver.age <= 15) monthlyStats.childAbuse++; // 15세 이하 아동 학대 추가
+
+        logMsg(`"${actor.code}"${getParticle(actor.code, '이가')} "${receiver.code}"${getParticle(receiver.code, '을를')} "공격"했습니다.`);
+        logMsg(`"${receiver.code}"${getParticle(receiver.code, '이가')} 분노합니다.`);
+
+        let parent = bots.find(b => b.id === receiver.parentId);
+        if(parent && !parent.isHospitalized) {
+            let distToParent = Math.abs(parent.x - actor.x) + Math.abs(parent.y - actor.y);
+            if(distToParent <= 5) {
+                actor.hp -= 1; 
+                monthlyStats.attacks++; // 복수도 공격 횟수로 집계
+                logMsg(`"${parent.code}"${getParticle(parent.code, '이가')} 자식을 위해 "${actor.code}"${getParticle(actor.code, '을를')} "복수(공격)"했습니다!`);
+            }
+        }
+        checkHP(receiver); checkHP(actor); 
+        return 'attack';
+    } else {
+        let rnd = Math.floor(Math.random() * 8);
+        let actName = "";
+        if(rnd === 0) { actor.anger += 3; actName = "종교권유"; }
+        else if(rnd === 1) { actor.anger += 1; actName = "구걸"; }
+        else if(rnd === 2) { actor.anger += 10; actName = "절도"; }
+        else if(rnd === 3) { actor.happiness += 7; actName = "후원"; }
+        else if(rnd === 4) { actor.happiness += 5; actName = "위로"; }
+        else if(rnd === 5) { actor.happiness += 3; actName = "응원"; }
+        else if(rnd === 6) { actor.happiness += 2; actName = "간식나눔"; }
+        else if(rnd === 7) { actor.happiness += 10; actName = "대접"; }
+        logMsg(`"${actor.code}"${getParticle(actor.code, '이가')} "${receiver.code}"에게 "${actName}"${getParticle(actName, '을를')} 시도했습니다.`);
+        return 'random';
+    }
+}
+
+function checkFemaleLogic(male, female, isFriendly) {
+    if(female.happiness <= 30 || female.anger >= 50) {
+        female.state = 'fleeing'; female.fleeTargetId = male.id; female.stateTimer = 15;
+        monthlyStats.fleeCount++; // 성범죄 신고(도망) 누적
+        logMsg(`"${female.code}"${getParticle(female.code, '이가')} "${male.code}"${getParticle(male.code, '을를')} 피해 도망칩니다.`);
+    } 
+    else if (female.age >= 15 && female.age <= 40 && !female.isPregnant) {
+        if(!isFriendly) return; 
+
+        if(!female.maleInteractTracker[male.id]) {
+            female.maleInteractTracker[male.id] = { count: 0, firstSession: totalSessions };
+        }
+        let tracker = female.maleInteractTracker[male.id];
+        
+        if (totalSessions - tracker.firstSession > 3) {
+            tracker.count = 1; tracker.firstSession = totalSessions;
+        } else {
+            tracker.count++;
+            if(tracker.count >= P_PREG_REQ) { 
+                female.isPregnant = true;
+                female.pregnancyTimer = 9; 
+                female.pregHospitalCount = 0; 
+                monthlyStats.pregnancies++; // 임신 누적
+                logMsg(`"${female.code}"${getParticle(female.code, '이가')} 새로운 생명을 잉태했습니다.`);
+            }
+        }
+    }
+}
+
+function doBirth(female) {
+    female.isPregnant = false;
+    female.happiness = Math.min(100, female.happiness + 15);
+    female.anger = Math.max(0, female.anger - 7);
+    
+    let gender = Math.random() > 0.5 ? 'M' : 'F';
+    let pos = getEmptyPos();
+    let child = new Bot(1, gender, pos.x, pos.y);
+    child.parentId = female.id;
+    female.children.push(child.id);
+    bots.push(child);
+    
+    monthlyStats.births++; // 출산 누적
+    logMsg(`"${female.code}"${getParticle(female.code, '이가')} 새로운 봇(${child.code}, 1세)${getParticle(child.code, '을를')} 출산했습니다!`);
+}
+
+function checkHP(bot) {
+    if (P_STRICT_PUNISH && bot.attacksThisSession >= 2) bot.hp = 0;
+
+    if (bot.hp <= 0 && !bot.isHospitalized) {
+        bot.isHospitalized = true; bot.hospitalCount++;
+        bot.anger += 10; bot.happiness = Math.max(0, bot.happiness - 10);
+        
+        monthlyStats.hospitalized++; // 병원 입원 누적
+
+        if (bot.isPregnant) {
+            bot.pregHospitalCount++;
+            if(bot.pregHospitalCount >= 2) {
+                bot.pregnancyTimer = -1; bot.isPregnant = false;
+                bot.anger += 20; bot.happiness -= 30;
+                monthlyStats.miscarriages++; // 유산 누적
+                logMsg(`"${bot.code}"에게 안타깝게도 유산이 발생했습니다.`);
+            }
+        }
+
+        if (bot.hospitalCount >= 10) {
+            monthlyStats.deadBots.push(bot.code); // 사망자 명단 추가
+            logMsg(`"${bot.code}"${getParticle(bot.code, '이가')} 누적 병원 10회로 사망했습니다.`);
+        }
+    }
+}
+
+function tryMove(bot, dx, dy) {
+    if(dx === 0 && dy === 0) return false;
+    let nx = bot.x + dx; let ny = bot.y + dy;
+    if(nx < 0 || nx >= GRID_SIZE || ny < 0 || ny >= GRID_SIZE) return false;
+    if(mapGrid[nx][ny] !== 0) return false; 
+    if(getBotAt(nx, ny)) return false;
+    bot.x = nx; bot.y = ny;
+    return true;
+}
+
+function moveTowards(bot, tx, ty) {
+    let dx = Math.sign(tx - bot.x); 
+    let dy = Math.sign(ty - bot.y);
+    
+    // 일단 목표 방향으로 정직하게 이동 시도
+    let success = tryMove(bot, dx, dy);
+    
+    // 💡 의도된 멍청함: 가려던 길이 막히면 잔머리(Sliding) 안 굴리고
+    // "아 씨, 막혔네" 하면서 그냥 엉뚱한 랜덤 방향으로 튕겨서 걸어 가버림.
+    if (!success) {
+        bot.wanderTimer = 0; // 랜덤 방향 리셋 유도
+        moveRandom(bot); 
+    }
+}
+
+function moveAway(bot, predator) {
+    let dx = Math.sign(bot.x - predator.x); 
+    let dy = Math.sign(bot.y - predator.y);
+    if(dx === 0 && dy === 0) { dx = 1; dy = 1; } 
+    
+    let success = tryMove(bot, dx, dy);
+    
+    // 도망치다 막혀도 멍청하게 다른 랜덤 방향으로 튐
+    if (!success) {
+        bot.wanderTimer = 0;
+        moveRandom(bot);
+    }
+}
+
+function moveRandom(bot) {
+    // 봇 객체에 임시 방향 타이머가 없다면 세팅
+    if (bot.wanderTimer === undefined || bot.wanderTimer <= 0) {
+        bot.wanderDx = Math.floor(Math.random()*3)-1; 
+        bot.wanderDy = Math.floor(Math.random()*3)-1;
+        bot.wanderTimer = Math.floor(Math.random()*5) + 3; // 3~7턴 동안 같은 방향 유지
+    }
+    
+    // 제자리에 멈춰있기로 한 경우
+    if (bot.wanderDx === 0 && bot.wanderDy === 0) {
+        bot.wanderTimer = 0; 
+        return;
+    }
+
+    // 정해진 방향으로 걷기 시도
+    let success = tryMove(bot, bot.wanderDx, bot.wanderDy);
+    
+    if (!success) {
+        // 벽이나 봇에 막혔다면 바로 타이머를 0으로 만들어 다음 턴에 새 방향을 찾게 함
+        bot.wanderTimer = 0; 
+    } else {
+        bot.wanderTimer--;
+    }
+}
+
+function endSession() {
+    clearInterval(sessionInterval); isSessionRunning = false; totalSessions++;
+    
+    bots.forEach(bot => {
+        bot.attacksThisSession = 0;
+        if(bot.isHospitalized) { bot.isHospitalized = false; bot.hp = bot.maxHp; }
+        if(totalSessions % 12 === 0) { bot.age++; if(bot.age === 50) bot.maxHp = 2; }
+
+        if(bot.isPregnant) {
+            bot.pregnancyTimer--;
+            if(bot.pregnancyTimer <= 0) { bot.state = 'birthing'; bot.stateTimer = 3; }
+        }
+
+        bot.investTimer++;
+        if(bot.investTimer >= 6) { bot.pickStock(); bot.investTimer = 0; }
+    });
+
+    processStocks();
+    bots = bots.filter(b => b.hospitalCount < 10);
+
+    if (policyTimer > 0) {
+        policyTimer--;
+        if (policyTimer === 0) { P_PREG_REQ = 5; P_COOLDOWN = 10; P_STRICT_PUNISH = false; }
+    }
+
+    updateUI();
+    document.getElementById('btn-next-session').disabled = false;
+    document.getElementById('btn-next-session').innerHTML = `<span style="font-size:28px">📑</span> 1세션 진행 (1달)`;
+
+    // ---------------- 월간 보고서 출력 세팅 ----------------
+    let currentMonth = (totalSessions % 12 === 0) ? 12 : totalSessions % 12;
+    document.getElementById('r-month').innerText = currentMonth;
+    document.getElementById('r-attacks').innerText = `${monthlyStats.attacks}건`;
+    document.getElementById('r-friendly').innerText = `${monthlyStats.friendly}건`;
+    document.getElementById('r-abuse').innerText = `${monthlyStats.childAbuse}건`;
+    document.getElementById('r-kidnap').innerText = `${monthlyStats.kidnap}건`;
+    document.getElementById('r-flee').innerText = `${monthlyStats.fleeCount}명`;
+    document.getElementById('r-hospital').innerText = `${monthlyStats.hospitalized}명`;
+    document.getElementById('r-preg').innerText = `${monthlyStats.pregnancies}명`;
+    document.getElementById('r-birth').innerText = `${monthlyStats.births}명`;
+    document.getElementById('r-misc').innerText = `${monthlyStats.miscarriages}명`;
+    document.getElementById('r-death').innerText = `${monthlyStats.deadBots.length}명`;
+    
+    if (monthlyStats.deadBots.length > 0) {
+        document.getElementById('r-death-names').innerText = `명단: ${monthlyStats.deadBots.join(', ')}`;
+    } else {
+        document.getElementById('r-death-names').innerText = "";
+    }
+
+    // 보고서 창 띄우기 (보고서를 닫을 때 정책창을 체크함)
+    document.getElementById('report-overlay').style.display = 'flex';
+}
+
+// ---------------- 보고서 닫기 버튼 이벤트 ----------------
+document.getElementById('btn-close-report').addEventListener('click', () => {
+    document.getElementById('report-overlay').style.display = 'none';
+    resetMonthlyStats(); // 다음 달을 위해 통계 초기화
+
+    // 12개월 째라면 정책 오버레이 띄우기
+    if (totalSessions % 12 === 0) {
+        document.getElementById('policy-overlay').style.display = 'flex';
+    }
+});
+
+function processStocks() {
+    for(let k in stocks) { stocks[k].failMod = 0; stocks[k].succMod = 0; }
+
+    for(let key in stocks) {
+        let st = stocks[key];
+        let isJackpot = Math.random() < st.jackpot;
+        let succRate = Math.min(70, Math.max(10, (st.drive / 3) * 2));
+        let failRate = Math.min(80, Math.max(0, 50 - (st.safe / 2)));
+
+        let r = Math.random() * 100; let result = 0; 
+        if(isJackpot) result = 1;
+        else if (r < succRate) result = 1;
+        else if (r < succRate + failRate) result = -1;
+
+        bots.filter(b => b.currentStock === key && !b.isHospitalized).forEach(bot => {
+            if(result === 1) { bot.happiness = Math.min(100, bot.happiness + 7); bot.anger = Math.max(0, bot.anger - 7); stocks[key].succMod = 15; } 
+            else if (result === -1) { bot.happiness = Math.max(0, bot.happiness - 10); bot.anger += 8; stocks[key].failMod = -10; }
+        });
+    }
+}
+
+function applyPolicy(num) {
+    activePolicy = num; policyTimer = 12; 
+    P_PREG_REQ = 5; P_COOLDOWN = 10; P_STRICT_PUNISH = false;
+
+    let keys = Object.keys(stocks);
+    let rKey = keys[Math.floor(Math.random() * keys.length)];
+
+    switch(num) {
+        case 1: P_STRICT_PUNISH = true; break;
+        case 2: stocks[rKey].safe = Math.max(0, stocks[rKey].safe - 10); break;
+        case 3: stocks[rKey].drive += 14; break;
+        case 4: 
+            for(let i=0; i<10; i++) {
+                let pos = getEmptyPos(); let g = Math.random() > 0.5 ? 'M' : 'F'; let a = Math.floor(Math.random() * 40) + 10;
+                let newBot = new Bot(a, g, pos.x, pos.y);
+                bots.push(newBot);
+                logMsg(`[이주정책] 새로운 봇 "${newBot.code}"${getParticle(newBot.code, '이가')} 도시에 합류했습니다.`);
+            } break;
+        case 5: P_PREG_REQ = 3; break;
+        case 6: P_COOLDOWN = 15; break;
+        case 7: P_COOLDOWN = 5; break;
+        case 8: break;
+    }
+    logMsg(`새로운 정책 [${num}번]이 수립되었습니다.`);
+    document.getElementById('policy-overlay').style.display = 'none';
+    updateUI(); draw();
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for(let x=0; x<GRID_SIZE; x++) {
+        for(let y=0; y<GRID_SIZE; y++) {
+            if(mapGrid[x][y] === 1) { ctx.fillStyle = '#444'; ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE); }
+        }
+    }
+    bots.forEach(bot => {
+        if(bot.isHospitalized) return;
+        ctx.fillStyle = bot.getColor(); ctx.beginPath();
+        ctx.arc(bot.x * TILE_SIZE + TILE_SIZE/2, bot.y * TILE_SIZE + TILE_SIZE/2, TILE_SIZE/2.5, 0, Math.PI * 2); ctx.fill();
+        if(bot.isPregnant) { ctx.strokeStyle = 'white'; ctx.lineWidth = 1; ctx.stroke(); }
+    });
+}
+
+function updateUI() {
+    document.getElementById('ui-year').innerText = Math.floor(totalSessions / 12);
+    document.getElementById('ui-month').innerText = (totalSessions % 12) + 1;
+    document.getElementById('ui-pop').innerText = bots.length;
+}
+
+document.getElementById('btn-start').addEventListener('click', () => {
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'flex';
+    initGame(); 
+    // 첫 시작 시엔 정책창 띄우기 (보고서 패스)
+    document.getElementById('policy-overlay').style.display = 'flex';
+});
+
+document.getElementById('btn-next-session').addEventListener('click', () => {
+    if(isSessionRunning) return;
+    isSessionRunning = true; currentTurn = 0;
+    let btn = document.getElementById('btn-next-session'); btn.disabled = true;
+    
+    // 300턴 (30초) 진행으로 수정 적용됨
+    sessionInterval = setInterval(() => {
+        executeTurn(); currentTurn++;
+        if(currentTurn % 10 === 0) btn.innerHTML = `진행 중... ${Math.floor((currentTurn/300)*100)}%`;
+        if(currentTurn >= 300) endSession();
+    }, 100); 
+});
+</script>
+</body>
+</html>
