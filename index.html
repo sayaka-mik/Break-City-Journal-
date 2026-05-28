@@ -1494,6 +1494,7 @@ document.getElementById('btn-kill').addEventListener('click', () => {
     if(confirm("참칭자를 처단하고 역사서를 쓰시겠습니까?")) showEpicEnding(); 
 });
 
+// 💡 서사시 출력 및 초기화
 function showEpicEnding() {
     isAutoMode = false; clearInterval(sessionInterval);
     document.getElementById('game-screen').style.display = 'none'; document.getElementById('epic-screen').style.display = 'flex';
@@ -1505,9 +1506,15 @@ function showEpicEnding() {
     let lowestAttackRuler = [...rulerStats].sort((a,b)=>a.attacks - b.attacks)[0];
     let highestBirthRuler = [...rulerStats].sort((a,b)=>b.births - a.births)[0];
     
-    // 💡 신규 명예의 전당 항목 계산
     let highestDeathRuler = [...rulerStats].sort((a,b)=>b.deaths - a.deaths)[0];
     let highestImmigrantRuler = [...rulerStats].sort((a,b)=>b.immigrants - a.immigrants)[0];
+
+    // 💡 [신규 추가] 브레이크 시티 5대 누적 총계 계산
+    let totalEverPop = globalBotRegistry.length;
+    let totalEverPregnancies = globalBotRegistry.reduce((sum, b) => sum + b.totalPregnancies, 0);
+    let totalEverBirths = globalBotRegistry.reduce((sum, b) => sum + b.children.length, 0);
+    let totalEverDeaths = totalDeadCount;
+    let totalEverAttacks = globalBotRegistry.reduce((sum, b) => sum + b.totalAttacks, 0);
 
     // 혈통 계산 (현재 생존자 중)
     let survivors = bots; 
@@ -1519,7 +1526,6 @@ function showEpicEnding() {
         } else if (maxBloodBot.bloodline > 0) {
             bloodText = `[니어블러드] ${maxBloodBot.code} (원조 혈통 ${(maxBloodBot.bloodline * 100).toFixed(1)}% 보존)`;
         } else {
-            // 모두가 이민자 피 100% 라면 가장 오래된 조상을 둔 녀석을 찾음
             let nativeBot = [...survivors].sort((a,b) => a.ancestorArrival - b.ancestorArrival)[0];
             let aYear = Math.floor(nativeBot.ancestorArrival/12); let aMonth = (nativeBot.ancestorArrival%12)+1;
             bloodText = `[토박이] ${nativeBot.code} (${aYear}년 ${aMonth}월 유입된 조상의 후손)`;
@@ -1547,17 +1553,30 @@ function showEpicEnding() {
     
     document.getElementById('epic-hof').innerHTML = `
         <h3 style="color:#e67e22; margin-top:0; position: sticky; top: -15px; background: #222; padding-bottom: 5px;">🏆 명예의 전당</h3>
+        
+        <div style="background:#1a1a1a; padding:12px; border-radius:6px; border:1px solid #333; margin-bottom:15px; text-align:center; line-height:1.8;">
+            <div style="color:#aaa; font-size:11px; margin-bottom:5px; font-weight:bold;">[ 📜 도시 누적 통계 ]</div>
+            <span style="margin-right:12px;"><b>도시인구총원:</b> <span style="color:#f1c40f;">${totalEverPop}명</span></span>
+            <span><b>묘비:</b> <span style="color:#d63031;">${totalEverDeaths}개</span></span><br>
+            <span style="margin-right:12px;"><b>사랑의 결실:</b> <span style="color:#e84393;">임신 ${totalEverPregnancies}회</span></span>
+            <span><b>새로운 탄생:</b> <span style="color:#00b894;">출산 ${totalEverBirths}회</span></span><br>
+            <span><b>필멸자의 분노:</b> <span style="color:#e17055;">총 ${totalEverAttacks}번의 폭력</span></span>
+        </div>
+
         <ul style="list-style:none; padding:0; margin:0; font-size:13px; line-height:1.8;">
             <li><b>퍼스트 블러드:</b> <span style="color:#e74c3c;">${firstBloodBotName ? firstBloodBotName : '없음'}</span> (최초 사망자)</li>
             <li><b>브레이크 시티의 핏줄:</b> <span style="color:#f1c40f;">${bloodText}</span></li>
             <li style="border-top:1px dashed #555; margin-top:5px; padding-top:5px;"><b>미치광이 시장:</b> 제${highestDeathRuler ? highestDeathRuler.ruler : 1}대 (임기 중 <span style="color:#e74c3c;">사망 ${highestDeathRuler ? highestDeathRuler.deaths : 0}명</span>)</li>
             <li><b>간첩 의심 시장:</b> 제${highestImmigrantRuler ? highestImmigrantRuler.ruler : 1}대 (임기 중 <span style="color:#3498db;">이민 수용 ${highestImmigrantRuler ? highestImmigrantRuler.immigrants : 0}명</span>)</li>
-            <li><b>최고 평화 통치자:</b> 제${lowestAttackRuler ? lowestAttackRuler.ruler : 1}대 (임기 중 폭력 ${lowestAttackRuler ? lowestAttackRuler.attacks : 0}건)</li> <li><b>최고 번영 통치자:</b> 제${highestBirthRuler ? highestBirthRuler.ruler : 1}대 (임기 중 출산 ${highestBirthRuler ? highestBirthRuler.births : 0}명)</li>
+            <li><b>최고 평화 통치자:</b> 제${lowestAttackRuler ? lowestAttackRuler.ruler : 1}대 (임기 중 폭력 ${lowestAttackRuler ? lowestAttackRuler.attacks : 0}건)</li>
+            <li><b>최고 번영 통치자:</b> 제${highestBirthRuler ? highestBirthRuler.ruler : 1}대 (임기 중 출산 ${highestBirthRuler ? highestBirthRuler.births : 0}명)</li>
             <li style="border-top:1px dashed #555; margin-top:5px; padding-top:5px;"><b>최장수 개체:</b> ${oldest ? `${oldest.code} (${oldest.age}세)` : '기록없음'}</li>
             <li><b>최다 출산 개체:</b> ${mostBirthsBot ? `${mostBirthsBot.code} (${mostBirthsBot.children.length}명)` : '기록없음'}</li>
             <li><b>최다 폭력 개체:</b> ${mostAttacksBot ? `${mostAttacksBot.code} (${mostAttacksBot.totalAttacks}회)` : '기록없음'}</li>
             <li><b>최다 기행(수상한행위):</b> ${mostSuspiciousBot ? `${mostSuspiciousBot.code} (${mostSuspiciousBot.totalSuspicious}회)` : '기록없음'}</li>
-            <li style="border-top:1px dashed #555; margin-top:5px; padding-top:5px;"><b>최장 연속 채택 정책:</b> ${conText}</li> <li><b>최소 채택 정책:</b> ${leastText}</li> </ul>
+            <li style="border-top:1px dashed #555; margin-top:5px; padding-top:5px;"><b>최장 연속 채택 정책:</b> ${conText}</li>
+            <li><b>최소 채택 정책:</b> ${leastText}</li>
+        </ul>
     `;
 
     let logArr = []; let rIdx = 0;
@@ -1567,7 +1586,6 @@ function showEpicEnding() {
     }
     if (logArr.length === 0) logArr.push(`<div style="color:#888;">(역사서에 남겨질 만한 시간이 흐르지 않았습니다.)</div>`);
     
-    // 💡 로그 들어가는 타겟이 epic-log-content 로 변경됨!
     document.getElementById('epic-log-content').innerHTML = logArr.join(''); 
 }
 
