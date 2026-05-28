@@ -35,10 +35,31 @@
         .btn-large:hover { background-color: #444; border-color: #777; }
 
         /* 메인 화면 UI */
-        #game-screen { display: none; flex-direction: column; height: 100%; width: 100%; }
-        #top-bar { height: 60px; background-color: #1a1a24; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; font-size: 18px; font-weight: 700; border-bottom: 1px solid #333; }
-        .stat-text { color: #888; font-size: 14px; }
+        #top-bar { 
+            height: 60px; background-color: #1a1a24; 
+            display: grid; grid-template-columns: 1fr 1fr 1fr; /* 3등분 레이아웃으로 변경 */
+            align-items: center; padding: 0 15px; 
+            font-size: 15px; font-weight: 700; border-bottom: 1px solid #333; 
+        }
+        .stat-text { color: #888; font-size: 12px; }
         .stat-value { color: #fff; }
+
+        /* 💡 추가된 퇴임 버튼 스타일 */
+        .btn-retire {
+            background-color: #962d2d;
+            color: #ffffff;
+            border: 1px solid #ff4d4d;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            justify-self: center; /* 그리드 중앙 정렬 */
+            transition: background-color 0.2s;
+        }
+        .btn-retire:hover {
+            background-color: #bd3a3a;
+        }
         #map-container { flex: 1; display: flex; justify-content: center; align-items: center; padding: 10px; background-color: #0a0a0f; }
         canvas { background-color: #151515; border: 1px solid #333; max-width: 100%; max-height: 100%; aspect-ratio: 1 / 1; object-fit: contain; }
         #bottom-bar { height: 80px; background-color: #1a1a24; display: flex; justify-content: center; align-items: center; border-top: 1px solid #333; padding: 10px; }
@@ -123,8 +144,18 @@
 
     <div id="game-screen">
         <div id="top-bar">
-            <div><span class="stat-text">Date</span> <span class="stat-value" id="ui-year">0</span>년 <span class="stat-value" id="ui-month">1</span>개월</div>
-            <div><span class="stat-text">Pop</span> <span class="stat-value" id="ui-pop">100</span></div>
+            <div>
+                <span class="stat-text">Date</span> 
+                <span class="stat-value" id="ui-year">0</span>년 
+                <span class="stat-value" id="ui-month">1</span>개월
+            </div>
+            
+            <button class="btn-retire" id="btn-retire">🚪 퇴임한다</button>
+            
+            <div style="text-align: right;">
+                <span class="stat-text">Pop</span> 
+                <span class="stat-value" id="ui-pop">100</span>
+            </div>
         </div>
         <div id="map-container"><canvas id="gameCanvas" width="500" height="500"></canvas></div>
         <div id="log-area"></div>
@@ -812,6 +843,53 @@ document.getElementById('btn-start').addEventListener('click', () => {
     document.getElementById('policy-overlay').style.display = 'flex';
 });
 
+    // 💡 퇴임 버튼 클릭 이벤트 리스너 추가
+document.getElementById('btn-retire').addEventListener('click', () => {
+    if (!confirm("정말로 시장 직에서 퇴임하고 저널을 덮으시겠습니까?\n(모든 시뮬레이션 데이터가 초기화됩니다.)")) {
+        return;
+    }
+
+    // 1. 진행 중인 타이머 강제 종료 및 상태 리셋
+    clearInterval(sessionInterval);
+    isSessionRunning = false;
+    totalSessions = 0;
+    currentTurn = 0;
+    botIdCounter = 1;
+
+    // 2. 글로벌 시스템 데이터 초기화 (주식 기본값 복구)
+    stocks = {
+        energy:  { name: "에너지", safe: 50, drive: 10, jackpot: 0.01, failMod: 0, succMod: 0 },
+        material:{ name: "재료", safe: 70, drive: 25, jackpot: 0.05, failMod: 0, succMod: 0 },
+        science: { name: "과학", safe: 30, drive: 20, jackpot: 0.05, failMod: 0, succMod: 0 },
+        culture: { name: "문화", safe: 25, drive: 17, jackpot: 0.10, failMod: 0, succMod: 0 },
+        bitcoin: { name: "비트코인", safe: 10, drive: 13, jackpot: 0.20, failMod: 0, succMod: 0 }
+    };
+    
+    // 정책 리셋
+    activePolicy = 8;
+    policyTimer = 0;
+    P_COOLDOWN = 10;
+    P_PREG_REQ = 5;
+    P_STRICT_PUNISH = false;
+
+    // 3. 통계 오버레이 및 데이터 초기화
+    resetMonthlyStats();
+    document.getElementById('report-overlay').style.display = 'none';
+    document.getElementById('policy-overlay').style.display = 'none';
+
+    // 4. 하단 진행 버튼 텍스트 원복
+    let btnNext = document.getElementById('btn-next-session');
+    btnNext.disabled = false;
+    btnNext.innerHTML = `<span style="font-size:28px">📑</span> 1세션 진행 (1달)`;
+
+    // 5. 화면 전환 (게임 화면 숨기고 시작 화면 표시)
+    document.getElementById('game-screen').style.display = 'none';
+    document.getElementById('start-screen').style.display = 'flex';
+    
+    // 6. 로그창 초기화
+    document.getElementById('log-area').innerHTML = "";
+});
+    
 document.getElementById('btn-next-session').addEventListener('click', () => {
     if(isSessionRunning) return;
     isSessionRunning = true; currentTurn = 0;
