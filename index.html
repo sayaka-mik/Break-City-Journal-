@@ -1401,12 +1401,12 @@ function doAutoPolicy() {
     if (atkRate > curPop * (currentTriggers.p1_attackPct / 100)) pool.push({num: 1, reason: `일평균 폭력위험 초과`});
     
     let males = bots.filter(b => b.gender === 'M').length; let females = bots.filter(b => b.gender === 'F').length;
-    if (males >= curPop * (currentTriggers.p3_genderPct / 100)) pool.push({num: 3, stockKey: (Math.random()>0.5?'science':'bitcoin'), reason: `남성 편중 현상`});
-    if (females >= curPop * (currentTriggers.p3_genderPct / 100)) pool.push({num: 3, stockKey: (Math.random()>0.5?'material':'culture'), reason: `여성 편중 현상`});
+    if (males >= curPop * (currentTriggers.p3_genderPct / 100)) pool.push({num: 3, stockKey: (Math.random()>0.5?'science':'bitcoin'), reason: `포퓰리즘:남성 중심 산업 투자`});
+    if (females >= curPop * (currentTriggers.p3_genderPct / 100)) pool.push({num: 3, stockKey: (Math.random()>0.5?'material':'culture'), reason: `포퓰리즘:여성 중심 산업 투자`});
     if (totalSessions > 0 && totalSessions % currentTriggers.p3_session === 0) pool.push({num: 3, stockKey: 'energy', reason: `주기적 에너지 투자`});
     
-    if (curPop <= 10) forceP4 = true;
-    if (curPop <= currentTriggers.p4_popMax) pool.push({num: 4, reason: `인구 하한선 도달`});
+    if (curPop <= 2) forceP4 = true;
+    if (curPop <= currentTriggers.p4_popMax) pool.push({num: 4, reason: `도시 멸망 위기`});
     let oldPop = popHistory.length >= 12 ? popHistory[popHistory.length - 12] : curPop;
     if ((oldPop - curPop) / oldPop * 100 >= currentTriggers.p4_popDropPct) pool.push({num: 4, reason: `급격한 인구 감소`});
     if (totalSessions > 0 && totalSessions % currentTriggers.p4_session === 0) pool.push({num: 4, reason: `정기 이주 수용`});
@@ -1420,7 +1420,7 @@ function doAutoPolicy() {
     }
 
     if (friendlyRate < curPop * (currentTriggers.p7_friendPct / 100)) pool.push({num: 7, reason: `시민간 교류 저조`});
-    if (totalSessions > 0 && totalSessions % currentTriggers.p8_session === 0) pool.push({num: 8, reason: `주기적 무정부 갱신`});
+    if (totalSessions > 0 && totalSessions % currentTriggers.p8_session === 0) pool.push({num: 8, reason: `공직자 휴가`});
 
     if (pool.length === 0 || (totalSessions > 0 && totalSessions % currentTriggers.p2_session === 0)) {
         let keys = Object.keys(stocks); pool.push({num: 2, stockKey: keys[Math.floor(Math.random()*keys.length)], reason: pool.length===0?`마땅한 안건 없음`:`정기적 기업 규제`});
