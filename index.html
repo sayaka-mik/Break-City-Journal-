@@ -320,6 +320,7 @@ const TILE_SIZE = 10;
 let mapGrid = [];
 let bots = [];
 let botIdCounter = 1;
+let effects = []; // 💡 교류 이펙트를 보관할 배열 추가!
 
 let totalSessions = 0;
 let currentTurn = 0; 
@@ -332,7 +333,7 @@ let P_COOLDOWN = 10;
 let P_PREG_REQ = 5;
 let P_STRICT_PUNISH = false;
 let selectedPolicyNum = null; // 규제(2) 혹은 투자(3) 보관용 변수
-
+    
 // ---------------- 월간 통계 데이터 구조 ----------------
 let monthlyStats = {
     attacks: 0, hospitalized: 0, pregnancies: 0, births: 0, miscarriages: 0,
@@ -578,6 +579,23 @@ function initiateInteraction(bot, target) {
 
     let resBot = resolveInteraction(bot, target);
     let resTarget = resolveInteraction(target, bot); 
+
+    // 💡 이펙트 색상 판별 (공격 > 친목 > 랜덤 순서로 우선순위)
+    let effectColor = '#f1c40f'; // 기본 랜덤 (노란색)
+    if (resBot === 'attack' || resTarget === 'attack') {
+        effectColor = '#ff4d4d'; // 공격 포함 시 (붉은색)
+    } else if (resBot === 'friend' || resTarget === 'friend') {
+        effectColor = '#2ecc71'; // 친목 포함 시 (초록색)
+    }
+
+    // 💡 이펙트 생성 (두 봇의 중간 좌표에 생성)
+    effects.push({
+        x: (bot.x + target.x) / 2, 
+        y: (bot.y + target.y) / 2,
+        color: effectColor,
+        life: 5,     // 5턴(0.25초) 동안 화면에 유지됨
+        maxLife: 5
+    });
 
     if (bot.gender === 'M' && target.gender === 'F') checkFemaleLogic(bot, target, resBot === 'friend' || resTarget === 'friend');
     if (target.gender === 'M' && bot.gender === 'F') checkFemaleLogic(target, bot, resBot === 'friend' || resTarget === 'friend');
@@ -983,8 +1001,38 @@ function draw() {
         if(bot.isHospitalized) return;
         ctx.fillStyle = bot.getColor(); ctx.beginPath();
         ctx.arc(bot.x * TILE_SIZE + TILE_SIZE/2, bot.y * TILE_SIZE + TILE_SIZE/2, TILE_SIZE/2.5, 0, Math.PI * 2); ctx.fill();
-        if(bot.isPregnant) { ctx.strokeStyle = 'white'; ctx.lineWidth = 1; ctx.stroke(); }
-    });
+        if(bot.isPregnant) { ctx.strokeStyle = 'white'; ctx.lineWidth = 1; ctx.stroke(); }    });
+            // 💡 이펙트 그리기 로직 (추가된 부분)
+    for (let i = effects.length - 1; i >= 0; i--) {
+        let eff = effects[i];
+        
+        // 캔버스 픽셀 좌표로 변환
+        let px = eff.x * TILE_SIZE + TILE_SIZE / 2;
+        let py = eff.y * TILE_SIZE + TILE_SIZE / 2;
+        
+        // 수명에 따라 크기가 커졌다가 작아지는 팝업 애니메이션 수학식
+        let progress = eff.life / eff.maxLife; 
+        let radius = (TILE_SIZE * 0.8) * Math.sin(progress * Math.PI); 
+
+        ctx.beginPath();
+        // 4방향 뾰족한 반짝임(✨) 모양 그리기
+        ctx.moveTo(px, py - radius);
+        ctx.quadraticCurveTo(px, py, px + radius, py);
+        ctx.quadraticCurveTo(px, py, px, py + radius);
+        ctx.quadraticCurveTo(px, py, px - radius, py);
+        ctx.quadraticCurveTo(px, py, px, py - radius);
+        
+        // 색상 및 얇은 흰색 테두리
+        ctx.fillStyle = eff.color;
+        ctx.fill();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'white';
+        ctx.stroke();
+
+        // 수명 감소 및 소멸 처리
+        eff.life--;
+        if (eff.life <= 0) effects.splice(i, 1);
+    }
 }
 
 function updateUI() {
