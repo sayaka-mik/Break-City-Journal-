@@ -81,6 +81,24 @@
         }
         .btn-close-report:hover { background-color: #15170e; }
 
+        /* 비서관의 한마디 스타일 */
+        .report-secretary {
+            margin: 15px 0;
+            padding: 12px;
+            border: 2px solid #5a5266;
+            background-color: #4a4052; /* 퍼플그레이 */
+            border-radius: 6px;
+        }
+        .sec-title {
+            font-size: 11px; color: #bbaacc; margin-bottom: 6px; font-weight: bold;
+        }
+        .sec-text {
+            color: #00ff00; /* 밝은 초록색 (레트로 터미널 느낌) */
+            font-size: 13px;
+            line-height: 1.5;
+            word-break: keep-all;
+            font-weight: bold;
+        }
 
         /* ---------------- 정책 오버레이 ---------------- */
         #policy-overlay {
@@ -124,6 +142,9 @@
                 <li><span>아동 학대 (15세 이하 피격):</span> <span class="report-val" id="r-abuse">0건</span></li>
                 <li><span>유괴 의심 (15세 이하 접근):</span> <span class="report-val" id="r-kidnap">0건</span></li>
                 <li><span>성범죄 신고 여성 (도주):</span> <span class="report-val" id="r-flee">0명</span></li>
+                <li><span>절도 신고 건수:</span> <span class="report-val" id="r-theft">0건</span></li>
+                <li><span>사이비 교세 확장:</span> <span class="report-val" id="r-cult">0건</span></li>
+                <li><span>부정부패 신고:</span> <span class="report-val" id="r-corruption">0건</span></li>
                 <li><span>병원 이송 인원:</span> <span class="report-val" id="r-hospital">0명</span></li>
                 <li><span>신규 임신:</span> <span class="report-val" id="r-preg">0명</span></li>
                 <li><span>신규 출산:</span> <span class="report-val" id="r-birth">0명</span></li>
@@ -131,6 +152,12 @@
                 <li><span>사망자:</span> <span class="report-val" id="r-death">0명</span></li>
             </ul>
             <span class="report-death-list" id="r-death-names"></span>
+            
+            <div class="report-secretary">
+                <div class="sec-title">💬 비서관의 코멘트</div>
+                <div class="sec-text" id="r-secretary">"시장님, 이번 달도 무사히 넘기셨군요."</div>
+            </div>
+            
             <button class="btn-close-report" id="btn-close-report">보고서 닫기</button>
         </div>
     </div>
@@ -170,20 +197,17 @@ let P_STRICT_PUNISH = false;
 
 // ---------------- 월간 통계 데이터 구조 ----------------
 let monthlyStats = {
-    attacks: 0,
-    hospitalized: 0,
-    pregnancies: 0,
-    births: 0,
-    miscarriages: 0,
-    fleeCount: 0,
-    friendly: 0,
-    deadBots: [],
-    childAbuse: 0,
-    kidnap: 0
+    attacks: 0, hospitalized: 0, pregnancies: 0, births: 0, miscarriages: 0,
+    fleeCount: 0, friendly: 0, deadBots: [], childAbuse: 0, kidnap: 0,
+    theft: 0, cult: 0, corruption: 0, miscarriageAges: [] // 💡 새로 추가된 값들
 };
 
 function resetMonthlyStats() {
-    monthlyStats = { attacks: 0, hospitalized: 0, pregnancies: 0, births: 0, miscarriages: 0, fleeCount: 0, friendly: 0, deadBots: [], childAbuse: 0, kidnap: 0 };
+    monthlyStats = { 
+        attacks: 0, hospitalized: 0, pregnancies: 0, births: 0, miscarriages: 0, 
+        fleeCount: 0, friendly: 0, deadBots: [], childAbuse: 0, kidnap: 0,
+        theft: 0, cult: 0, corruption: 0, miscarriageAges: [] 
+    };
 }
 
 let stocks = {
@@ -462,10 +486,47 @@ function resolveInteraction(actor, receiver) {
         else if(rnd === 4) { actor.happiness += 5; actName = "위로"; }
         else if(rnd === 5) { actor.happiness += 3; actName = "응원"; }
         else if(rnd === 6) { actor.happiness += 2; actName = "간식나눔"; }
-        else if(rnd === 7) { actor.happiness += 10; actName = "대접"; }
+        else if(rnd === 7) { actor.happiness += 10; actName = "대접"; monthlyStats.corruption++; }
         logMsg(`"${actor.code}"${getParticle(actor.code, '이가')} "${receiver.code}"에게 "${actName}"${getParticle(actName, '을를')} 시도했습니다.`);
         return 'random';
     }
+}
+
+function getSecretaryComment() {
+    let pool = [];
+    
+    // 1. 상시 표출 가능
+    pool.push("시장님, 이번 달도 무사히 넘기셨군요.");
+    
+    // 2. 산모의 분노 (유산 발생 시, 해당 나이 참조)
+    if (monthlyStats.miscarriages > 0 && monthlyStats.miscarriageAges.length > 0) {
+        // 유산한 봇들 중 무작위 1명의 나이를 뽑아옴
+        let rndAge = monthlyStats.miscarriageAges[Math.floor(Math.random() * monthlyStats.miscarriageAges.length)];
+        pool.push(`시장님, 폭력사태로 아이를 잃은 ${rndAge}세 여성이 청사 앞에서 1인 시위를 시작했습니다.`);
+    }
+
+    // 3. 사회부적응아의 호소문
+    if (monthlyStats.friendly >= 1200) {
+        pool.push("시장님, 익명을 요청한 한 시민이 요즘 우리 지역은 소음 공해와 환경 문제에 시달리며 짐승의 왕국이나 다름없다고... 아니, 이건 파쇄용 문서잖아?");
+    }
+
+    // 4. 아동권리협약
+    if (monthlyStats.kidnap >= 10) {
+        pool.push("아동보호를 위한 정책을 추진하셔야 할 것 같습니다.");
+    }
+
+    // 5. 고담시티
+    if (monthlyStats.hospitalized >= 50) {
+        pool.push("시장님, 요즘 거리에 나가보시는 하시는 겁니까? 거리에 사람이 없습니다. 텅 비었다구요.");
+    }
+
+    // 6. 파이트클럽
+    if (monthlyStats.attacks >= 400) {
+        pool.push("분노 바이러스라고 아십니까? *퍽*");
+    }
+
+    // 모인 문장(풀) 중 랜덤 1개 반환
+    return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function checkFemaleLogic(male, female, isFriendly) {
@@ -527,7 +588,8 @@ function checkHP(bot) {
             if(bot.pregHospitalCount >= 2) {
                 bot.pregnancyTimer = -1; bot.isPregnant = false;
                 bot.anger += 20; bot.happiness -= 30;
-                monthlyStats.miscarriages++; // 유산 누적
+                monthlyStats.miscarriages++;
+                monthlyStats.miscarriageAges.push(bot.age); // 💡 이 줄을 추가! (나이 수집)
                 logMsg(`"${bot.code}"에게 안타깝게도 유산이 발생했습니다.`);
             }
         }
@@ -645,6 +707,11 @@ function endSession() {
     document.getElementById('r-birth').innerText = `${monthlyStats.births}명`;
     document.getElementById('r-misc').innerText = `${monthlyStats.miscarriages}명`;
     document.getElementById('r-death').innerText = `${monthlyStats.deadBots.length}명`;
+    // 💡 추가된 UI 업데이트
+    document.getElementById('r-theft').innerText = `${monthlyStats.theft}건`;
+    document.getElementById('r-cult').innerText = `${monthlyStats.cult}건`;
+    document.getElementById('r-corruption').innerText = `${monthlyStats.corruption}건`;
+    document.getElementById('r-secretary').innerText = getSecretaryComment(); // 비서관 랜덤 대사 삽입
     
     if (monthlyStats.deadBots.length > 0) {
         document.getElementById('r-death-names').innerText = `명단: ${monthlyStats.deadBots.join(', ')}`;
