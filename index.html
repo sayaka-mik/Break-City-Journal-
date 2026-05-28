@@ -1098,9 +1098,9 @@ document.getElementById('btn-next-session').addEventListener('click', () => {
     
     sessionInterval = setInterval(() => {
         executeTurn(); currentTurn++;
-        if(currentTurn % 10 === 0) btn.innerHTML = `진행 중... ${Math.floor((currentTurn/300)*100)}%`;
-        if(currentTurn >= 300) endSession();
-    }, 50); 
+        if(currentTurn % 10 === 0) btn.innerHTML = `진행 중... ${Math.floor((currentTurn/400)*100)}%`;
+        if(currentTurn >= 400) endSession();
+    }, 150); 
 });
 </script>
 </body>
