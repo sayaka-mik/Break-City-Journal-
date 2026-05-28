@@ -631,6 +631,7 @@ function resolveInteraction(actor, receiver) {
     } else {
         let rnd = Math.floor(Math.random() * 8);
         let actName = "";
+        actor.totalSuspicious++; 
         if(rnd === 0) { actor.anger += 3; actName = "종교권유"; }
         else if(rnd === 1) { actor.anger += 1; actName = "구걸"; }
         else if(rnd === 2) { actor.anger += 10; actName = "절도"; monthlyStats.theft++; }
